@@ -448,9 +448,11 @@
      * @param {number} hexId
      * @param {'cw60'|'cw'|'flip'|'ccw'|'ccw60'} op
      */
-    validateMove(hexId, op) {
+    validateMove(hexId, op, internal = false) {
       if (!OPS.includes(op)) return { ok: false, reason: 'Sólo se permiten giros múltiplos de 60°' };
-      if (!this.allowedOps.includes(op)) {
+      // Deshacer aplica el giro inverso aunque el jugador no pueda usarlo
+      // directamente (p. ej. −60° cuando sólo se permite +60°).
+      if (!internal && !this.allowedOps.includes(op)) {
         const list = [...new Set(this.allowedOps.map((o) => Math.min(OP_DEGREES[o], 360 - OP_DEGREES[o])))];
         return { ok: false, reason: 'Sólo se permite girar ' + list.join('° o ') + '°' };
       }
@@ -536,7 +538,7 @@
       if (!m) return null;
       const hexId = this.hexAt(m.key);
       const op = INVERSE[m.op];
-      if (!this.validateMove(hexId, op).ok) return null;
+      if (!this.validateMove(hexId, op, true).ok) return null;
       this.history.pop();
       const transition = this._apply(hexId, op);
       this.future.push(m);
@@ -548,7 +550,7 @@
       const m = this.future[this.future.length - 1];
       if (!m) return null;
       const hexId = this.hexAt(m.key);
-      if (!this.validateMove(hexId, m.op).ok) return null;
+      if (!this.validateMove(hexId, m.op, true).ok) return null;
       this.future.pop();
       const transition = this._apply(hexId, m.op);
       this.history.push(m);

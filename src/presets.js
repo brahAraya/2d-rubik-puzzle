@@ -1,11 +1,9 @@
 /*
- * Disposiciones del tablero (particiones planas). La disposición es a la vez
- * la forma del estado resuelto: el objetivo es volver a ella con sus colores.
+ * Formas del tablero (particiones planas).
  *
- * «Cubo» es el puzzle original: 27 rombos que forman un cubo 3×3×3 macizo.
- * Las demás son variantes. Las pilas en escalera cortadas por un plano
- * diagonal i + j + k ≈ c tienen el máximo número de cubitos girables
- * (13 para N = 3; búsqueda exhaustiva en scripts/explore.js).
+ * El juego usa sólo el cubo macizo N×N×N (el puzzle original es 3×3×3: 27
+ * rombos). Las demás formas se usan en los tests y en scripts/explore.js para
+ * ejercitar el motor con teselaciones distintas.
  */
 (function (root, factory) {
   const api = factory();
@@ -25,10 +23,6 @@
     return diagonalCut(n, n - 1 + Math.ceil(n / 2));
   }
 
-  function pyramid(n) {
-    return diagonalCut(n, n);
-  }
-
   function solidCube(n) {
     return diagonalCut(n, 3 * n);
   }
@@ -45,12 +39,5 @@
     return h;
   }
 
-  const PRESETS = {
-    macizo: { label: 'Cubo (puzzle original)', build: solidCube },
-    escalonado: { label: 'Cubo escalonado', build: steppedCube },
-    piramide: { label: 'Pirámide', build: pyramid },
-    aleatorio: { label: 'Pila aleatoria', build: randomStack },
-  };
-
-  return { PRESETS, diagonalCut, steppedCube, pyramid, solidCube, randomStack };
+  return { diagonalCut, steppedCube, solidCube, randomStack };
 });

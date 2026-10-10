@@ -458,3 +458,21 @@ test('por defecto (como el puzzle físico) sólo se permite girar 60°', () => {
   const r = ProppPuzzle.deserialize(JSON.parse(JSON.stringify(p.serialize())));
   assert.deepEqual(r.allowedOps, ['cw60', 'ccw60']);
 });
+
+test('con sólo +60° permitido, −60° se bloquea pero deshacer y rehacer funcionan', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), mode: 'color', allowedOps: ['cw60'] });
+  assert.equal(p.move(0, 'ccw60').ok, false);
+  const rng = makeRng(8);
+  for (let i = 0; i < 50; i++) assert.ok(p.move(Math.floor(rng() * p.hexagons.length), 'cw60').ok);
+  const saved = ProppPuzzle.deserialize(JSON.parse(JSON.stringify(p.serialize())));
+  assert.equal(saved.moveCount, 50);
+  while (p.canUndo()) assert.ok(p.undo());
+  assert.ok(p.isSolved());
+  while (p.canRedo()) assert.ok(p.redo());
+  assert.ok(C.sameHeights(p.heights, saved.heights));
+  assert.deepEqual(p.perm, saved.perm);
+  // La mezcla aleatoria sólo usa el giro permitido.
+  p.reset();
+  p.randomize(rng);
+  assert.ok(p.analyze().solvable);
+});

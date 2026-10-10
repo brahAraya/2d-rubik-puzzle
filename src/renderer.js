@@ -14,9 +14,9 @@
   const SCALE = 60; // píxeles SVG por unidad de rejilla
 
   // Colores estándar de un cubo de Rubik visto desde la esquina U-F-R:
-  // arriba blanco, frente (izquierda) verde, derecha rojo.
+  // arriba amarillo, frente (izquierda) verde, derecha rojo.
   const PIECE_RGB = [
-    [246, 244, 236], // superior
+    [255, 208, 0], // superior
     [0, 158, 96], // izquierda
     [214, 40, 57], // derecha
   ];

@@ -1,147 +1,98 @@
 # Propp Lozenge
 
-Motor de juego en HTML/CSS/JavaScript vanilla que reproduce el puzzle
-**Propp Lozenge** (inventado por James Propp y diseñado por Oskar van Deventer):
-27 fichas en forma de rombo dentro de un marco hexagonal que crean la ilusión de
-un cubo 3D. Con una herramienta magnética se levanta un grupo hexagonal de tres
-fichas, se gira 60° y se vuelve a colocar. El objetivo es restaurar el cubo
-original.
+*[Español](README.es.md)*
 
-## Cómo ejecutarlo
+A browser version of **Propp Lozenge**, a flat puzzle that looks like a 3D cube.
+It is written in vanilla HTML, CSS and JavaScript, with no dependencies.
 
-Abre `index.html` en el navegador. No hace falta compilar ni servidor: los
-scripts son clásicos (no módulos ES), así que también funcionan desde `file://`.
+## The puzzle
+
+Propp Lozenge is a magnetic tile puzzle invented by **James (Jim) Propp** and
+designed by **Oskar van Deventer**.
+
+It has 27 diamond-shaped tiles (lozenges) arranged inside a hexagonal frame.
+Their colours and orientations create the illusion of a three-dimensional cube,
+even though the puzzle is completely flat.
+
+Each tile has a small magnet embedded in it. With the magnetic tool you lift a
+hexagonal group of three tiles, rotate it 60° and put it back in the frame.
+These rotations gradually transform the pattern and let you scramble the
+puzzle. Rotating a group turns a cube that sticks out into a hollow corner and
+the other way round, so the picture shifts between many familiar lozenge
+patterns that look like cubes with missing sections.
+
+The goal is simple: restore the original cube pattern.
+
+Unlike many permutation puzzles, a completely random arrangement of Propp
+Lozenge can always be solved. However badly you scramble it, there is always a
+way back.
+
+## How to play
+
+Open `index.html` in a browser. No build step or server is needed.
+
+- **Goal:** rebuild the solid cube with yellow top faces, green left faces and
+  red right faces.
+- **Select:** move the pointer over the board. The three-tile tool snaps to the
+  nearest point where three tiles meet. Green means the three tiles form a
+  valid group and can be rotated. Red means rotation is blocked at that point.
+- **Rotate:** click to rotate the group 60° clockwise. That is the only move.
+  To rotate further, click again; six clicks bring the group back to where it
+  started.
+- **Touch:** tap to select a group, then tap it again to rotate it.
+- **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates.
+- **Undo / redo:** use the icon buttons (hover over them to see the shortcut),
+  or `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` on a Mac).
+
+Each new game starts from a random arrangement, like taking every tile out of
+the frame and putting them back at random. The game is saved in the browser,
+including the move history. You can also play 2×2×2, 4×4×4 and 5×5×5 versions;
+3×3×3 is the original.
+
+## How it works
+
+- **Board:** every lozenge tiling of the hexagon is the projection of a stack
+  of small cubes in an N×N×N box (a plane partition). The engine stores the
+  current stack as a height map and derives the 3N² tiles from it.
+- **Rotatable groups:** a group is a grid point where exactly three tiles meet,
+  each with its 120° corner there. Before every move the engine checks that
+  there are three distinct tiles, one per orientation, that they share edges
+  pairwise, and that no fourth tile touches that point.
+- **The 60° move:** rotating a group by 60° swaps it to the other tiling of
+  the same hexagon, so the stack gains or loses a cube. Each tile lands exactly
+  on its position rotated by 60°; the tests check this geometrically.
+- **Solvability:** every sequence of moves produces an even permutation of the
+  tiles. The groups from all possible stacks link all 27 positions, so an even
+  permutation is always reachable. When a random arrangement comes out odd, two
+  tiles of the same colour are swapped. That fixes the parity without changing
+  how the board looks, which is why any random arrangement is solvable.
+- **Undo / redo:** each move is stored as its centre point. Undo applies a
+  −60° rotation at the same point.
+
+More technical detail, in Spanish, is in [README.es.md](README.es.md).
 
 ```bash
-npm test          # 29 tests del motor (node:test, sin dependencias)
-npm run explore   # búsqueda de la mejor disposición inicial (opcional: N)
+npm test   # engine tests (node:test, no dependencies)
 ```
 
-## Por qué vanilla
-
-No hay nada que justifique una dependencia externa:
-
-- **SVG** dibuja los rombos como polígonos nítidos a cualquier escala, con
-  detección de puntero y estilos CSS. Para unas decenas de piezas no hace falta
-  Canvas ni WebGL.
-- Las animaciones son `requestAnimationFrame` con una transformación `rotate`.
-- Los tests usan `node:test`, incluido en Node ≥ 18.
-
-## Modelo
-
-### Tablero
-
-El tablero es un hexágono de lado N sobre la rejilla triangular. Toda
-teselación de ese hexágono con rombos es la proyección isométrica de una pila
-de cubitos dentro de una caja N×N×N (biyección entre teselaciones por rombos y
-particiones planas, estudiada por James Propp). Por eso cada disposición se
-define con una **matriz de alturas** `h[i][j]` y el motor deduce de ella los 3N²
-rombos (`src/core.js → buildTiling`).
-
-Cada rombo es una **casilla** con una de tres orientaciones: cara superior,
-izquierda o derecha. Las **piezas** se mueven por las casillas. El sombreado
-depende de la orientación de la casilla, no de la pieza, así que la ilusión 3D
-se mantiene aunque el tablero esté desordenado.
-
-### La herramienta de 3 piezas
-
-Un cubito girable es un vértice de la rejilla en el que convergen exactamente
-tres rombos, cada uno con su ángulo de 120° en ese punto. Juntos forman un
-hexágono regular: la esquina visible de un cubito (convexo) o un rincón
-(cóncavo).
-
-- Al mover el puntero, la herramienta se ajusta al **punto de convergencia más
-  cercano**. Si allí hay un cubito válido se resalta en verde. Si no (por ejemplo
-  convergen 4 o 6 rombos), se muestra en rojo y el giro queda bloqueado.
-- Antes de cada giro, `validateMove` → `validateTriple` comprueba que haya tres
-  rombos distintos, uno de cada orientación, adyacentes dos a dos (comparten
-  arista) y con el ángulo obtuso en el vértice común, y que no haya un cuarto
-  rombo en ese punto.
-
-### El giro de 60°
-
-El **único movimiento** es girar el grupo 60°, en sentido horario o
-antihorario. Para girar más, se vuelve a girar: seis giros completan la vuelta.
-
-Un giro de 60° convierte el hexágono en su otra teselación: un cubito que
-sobresale pasa a ser un rincón y viceversa. Así cambia la forma de la pila y
-aparecen cubitos girables nuevos. La animación rota las tres fichas e
-interpola su sombreado mientras pasan de una cara a otra.
-
-Cada casilla tiene una identidad estable aunque cambie la forma (la cara
-superior de la columna (i, j), la cara +x de la fila (j, k) y la cara +y de la
-fila (i, k)). Internamente, 60° = 180° + 240°: media vuelta deja cada ficha en
-la nueva posición de su misma casilla, y los 240° restantes son un 3-ciclo. Los
-tests verifican geométricamente que cada ficha acaba en la posición girada
-exactamente 60° y con la orientación correcta.
-
-El motor conserva también los giros de 120°, 180° y 240° y un modo que sólo
-permite 120°/240° (`allowedOps`), pero la interfaz sólo ofrece el giro de 60°,
-como el puzzle físico.
-
-### Disposiciones
-
-«Cubo (puzzle original)» es el cubo 3×3×3 macizo. Las demás disposiciones
-(cubo escalonado, pirámide, pila aleatoria) son variantes: la disposición
-elegida es también la forma que hay que recuperar. Se puede jugar con tamaños
-de 2 a 5.
-
-### Objetivo
-
-- **Colores**: recuperar la forma original con todas las caras superiores
-  blancas, las izquierdas verdes y las derechas rojas.
-- **Numerado** (difícil): además, cada ficha debe volver a su casilla exacta.
-
-### Estado aleatorio y paridad
-
-Como en el puzzle físico, el estado inicial equivale a sacar todas las fichas
-y colocarlas al azar: una forma aleatoria (un paseo aleatorio de giros) con una
-colocación aleatoria de las fichas.
-
-Los giros de 120° son 3-ciclos (permutaciones **pares**) y la media vuelta no
-permuta fichas, así que toda secuencia de giros produce una permutación par.
-Los 3-ciclos de una zona conexa generan exactamente el grupo alternado sobre
-ella, y los cubitos de todas las formas posibles enlazan las 27 casillas (los
-tests lo comprueban de forma exhaustiva para N ≤ 3). Por tanto un estado es
-alcanzable si y sólo si la forma es una partición plana válida, las fichas son
-una permutación y esa permutación es par.
-
-En modo color, si la colocación aleatoria sale impar, `fixParity()`
-intercambia dos fichas del **mismo color** y el tablero se ve igual. Por eso
-**cualquier colocación aleatoria de las fichas tiene solución**, como dice la
-descripción del puzzle físico (hay un test que lo comprueba con 200
-colocaciones). En modo numerado la mitad de las colocaciones serían
-imposibles, y el generador sólo produce las alcanzables. `setState()` y la
-carga desde `localStorage` rechazan los estados imposibles, y la cabecera
-muestra la paridad en todo momento.
-
-### Deshacer / rehacer
-
-El motor guarda una pila de movimientos `{key, op}`, donde `key` es el vértice
-central y `op` es `cw60` o `ccw60`. Deshacer aplica el giro contrario en el
-mismo vértice y lo pasa a la pila de rehacer. Un giro nuevo vacía la pila de
-rehacer. Los giros se animan en cola, así que pulsar Ctrl+Z varias veces
-seguidas se reproduce en orden. La partida (con su historial) se guarda en
-`localStorage`.
-
-## Controles
-
-| Acción | Ratón | Táctil | Teclado |
-| --- | --- | --- | --- |
-| Seleccionar cubito | mover el puntero | tocar | flechas |
-| Girar 60° horario | clic | volver a tocar | `E` / `Enter` |
-| Girar 60° antihorario | Mayús+clic / clic derecho | botón ↺ | `Q` |
-| Deshacer / rehacer | botones | botones | `Ctrl+Z` / `Ctrl+Y` |
-
-## Estructura
+## Project layout
 
 ```
-index.html          interfaz
-styles.css          estilos (tema claro/oscuro)
-src/core.js         motor: teselación, validación, giros, paridad, historial (sin DOM)
-src/presets.js      disposiciones iniciales (particiones planas)
-src/renderer.js     vista SVG, herramienta de selección y animaciones
-src/main.js         controlador: eventos, HUD, persistencia
-tests/core.test.js  tests del motor
-scripts/explore.js  búsqueda de la disposición con más piezas móviles
+index.html          page
+styles.css          styles (light and dark themes)
+src/core.js         engine: tiling, validation, moves, parity, history (no DOM)
+src/presets.js      board shapes (the solid cube; other shapes are for tests)
+src/renderer.js     SVG view, selection tool and animations
+src/main.js         UI controller: input, HUD, saving
+tests/core.test.js  engine tests
+scripts/explore.js  search for the tilings with the most rotatable groups
 ```
+
+## Credits
+
+- **Puzzle invented by:** James (Jim) Propp
+- **Puzzle designed by:** Oskar van Deventer
+
+This project is an unofficial, fan-made digital version created for learning
+and enjoyment. It is not affiliated with or endorsed by the inventor or the
+designer of the physical puzzle.

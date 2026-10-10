@@ -5,22 +5,22 @@
   'use strict';
 
   const { ProppPuzzle } = ProppCore;
-  const { PRESETS } = ProppPresets;
-  const STORAGE_KEY = 'propp-lozenge-v3';
+  const { solidCube } = ProppPresets;
+  const STORAGE_KEY = 'propp-lozenge-v4';
+  // Único movimiento: girar el grupo de 3 rombos 60° en sentido horario.
+  const MOVE = 'cw60';
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const $ = (id) => document.getElementById(id);
   const ui = {
     board: $('board'), moves: $('moves'), time: $('time'), progress: $('progress'), parity: $('parity'),
-    status: $('status'), info: $('info'), win: $('win'), winDetail: $('win-detail'),
-    size: $('size'), preset: $('preset'), mode: $('mode'),
+    status: $('status'), win: $('win'), winDetail: $('win-detail'), size: $('size'),
   };
 
-  for (const key in PRESETS) {
-    const o = document.createElement('option');
-    o.value = key;
-    o.textContent = PRESETS[key].label;
-    ui.preset.appendChild(o);
+  // Atajos de teclado en las ayudas emergentes (⌘ en Mac).
+  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+    $('undo').dataset.tip = 'Deshacer · ⌘Z';
+    $('redo').dataset.tip = 'Rehacer · ⌘⇧Z';
   }
 
   const view = new ProppView.BoardView(ui.board, {
@@ -32,7 +32,6 @@
   });
 
   let puzzle = null;
-  let presetKey = 'macizo';
   let timer = { start: 0, elapsed: 0, running: false };
   let won = false;
   let selectedKey = null; // vértice de la herramienta de selección
@@ -40,12 +39,10 @@
 
   /* ---------------- Partida ---------------- */
 
-  function newPuzzle(n, preset, mode, state) {
-    presetKey = preset;
-    // Único movimiento: el giro mínimo de 60° (horario o antihorario).
+  function newPuzzle(n, state) {
     puzzle = state
       ? ProppPuzzle.deserialize(state)
-      : new ProppPuzzle({ heights: PRESETS[preset].build(n), mode });
+      : new ProppPuzzle({ heights: solidCube(n), mode: 'color', allowedOps: [MOVE] });
     puzzle.on(() => {
       updateHud();
       save();
@@ -54,16 +51,11 @@
     selectedKey = null;
     view.setSelection(null);
     ui.size.value = String(puzzle.target.n);
-    ui.preset.value = presetKey;
-    ui.mode.value = puzzle.mode;
-    ui.info.textContent =
-      'Cada giro de 60° cambia el patrón: un cubito que sobresale pasa a ser un rincón y viceversa. ' +
-      'Hay que recuperar la forma original con sus colores. ' + puzzle.slotCount + ' fichas.';
     updateHud();
   }
 
   function rebuild() {
-    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value);
+    newPuzzle(+ui.size.value);
     startRandom();
   }
 
@@ -83,18 +75,12 @@
 
   /* ---------------- Movimientos ---------------- */
 
-  // Giro mínimo de la herramienta magnética.
-  function stepOp(dir) {
-    return dir > 0 ? 'cw60' : 'ccw60';
-  }
-
   function selectedHex() {
     return selectedKey === null ? -1 : puzzle.hexAt(selectedKey);
   }
 
-  /** op: 'cw60' (60° horario) o 'ccw60' (60° antihorario). */
-  function act(op) {
-    const res = puzzle.move(selectedHex(), op);
+  function act() {
+    const res = puzzle.move(selectedHex(), MOVE);
     if (!res.ok) {
       blocked(res.reason);
       return false;
@@ -153,7 +139,7 @@
         : 'Aquí convergen ' + n + ' rombos: no forman un cubito de 3 piezas.', true, true);
     } else {
       const h = puzzle.hexagons[v.hex];
-      say('Cubito ' + h.kind + ' seleccionado · clic: 60° horario · Mayús+clic o clic derecho: 60° antihorario', false, true);
+      say('Cubito ' + h.kind + ' seleccionado · clic para girar 60°', false, true);
     }
   }
 
@@ -224,19 +210,13 @@
   });
   ui.board.addEventListener('click', (e) => {
     if (lastPointer === 'touch') {
-      if (touchPending) act(stepOp(1));
+      if (touchPending) act();
       touchPending = false;
       return;
     }
     const q = view.toLattice(e);
     if (q) selectAt(q[0], q[1]);
-    act(stepOp(e.shiftKey ? -1 : 1));
-  });
-  ui.board.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    const q = view.toLattice(e);
-    if (q) selectAt(q[0], q[1]);
-    act(stepOp(-1));
+    act();
   });
 
   document.addEventListener('keydown', (e) => {
@@ -259,14 +239,11 @@
     }
     if (k === 'e' || (k === 'enter' && e.target === document.body)) {
       e.preventDefault();
-      act(stepOp(1));
-    } else if (k === 'q') {
-      act(stepOp(-1));
+      act();
     }
   });
 
-  $('rot-cw').addEventListener('click', () => act(stepOp(1)));
-  $('rot-ccw').addEventListener('click', () => act(stepOp(-1)));
+  $('rot-cw').addEventListener('click', act);
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
@@ -283,14 +260,6 @@
     resetTimer();
   });
   ui.size.addEventListener('change', rebuild);
-  ui.preset.addEventListener('change', rebuild);
-  ui.mode.addEventListener('change', () => {
-    puzzle.setMode(ui.mode.value);
-    view.paint();
-    won = false;
-    ui.win.hidden = true;
-    checkWin();
-  });
 
   /* ---------------- HUD ---------------- */
 
@@ -326,7 +295,7 @@
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ preset: presetKey, state: puzzle.serialize(), elapsed: timer.elapsed }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: puzzle.serialize(), elapsed: timer.elapsed }));
     } catch (_) {
       /* almacenamiento no disponible: se ignora */
     }
@@ -337,9 +306,8 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return false;
       const data = JSON.parse(raw);
-      if (!PRESETS[data.preset]) return false;
-      // deserialize valida la partición plana y la paridad del estado guardado.
-      newPuzzle(0, data.preset, null, data.state);
+      // deserialize valida la forma, la paridad y el historial guardados.
+      newPuzzle(0, data.state);
       timer.elapsed = data.elapsed || 0;
       won = puzzle.isSolved() && puzzle.moveCount > 0;
       return true;
@@ -349,7 +317,7 @@
   }
 
   if (!load()) {
-    newPuzzle(3, 'macizo', 'color');
+    newPuzzle(3);
     startRandom();
   }
 })();

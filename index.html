@@ -30,12 +30,13 @@
 
     <aside class="panel">
       <div class="group">
-        <button id="rot-ccw" type="button" title="Girar 60° antihorario (Mayús+clic · clic derecho · Q)">↺ 60°</button>
-        <button id="rot-cw" type="button" title="Girar 60° horario (clic · E · Enter)">↻ 60°</button>
-      </div>
-      <div class="group">
-        <button id="undo" type="button" title="Deshacer (Ctrl+Z)">⟲ Deshacer</button>
-        <button id="redo" type="button" title="Rehacer (Ctrl+Y · Ctrl+Mayús+Z)">⟳ Rehacer</button>
+        <button id="rot-cw" type="button" class="rotate" title="Girar 60° en sentido horario (clic · E · Enter)">↻ Girar 60°</button>
+        <button id="undo" type="button" class="icon" aria-label="Deshacer" data-tip="Deshacer · Ctrl+Z">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        </button>
+        <button id="redo" type="button" class="icon" aria-label="Rehacer" data-tip="Rehacer · Ctrl+Y">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+        </button>
       </div>
 
       <div class="group col">
@@ -47,33 +48,22 @@
       <label>Tamaño
         <select id="size">
           <option value="2">2 × 2 × 2</option>
-          <option value="3" selected>3 × 3 × 3</option>
+          <option value="3" selected>3 × 3 × 3 (original)</option>
           <option value="4">4 × 4 × 4</option>
           <option value="5">5 × 5 × 5</option>
         </select>
       </label>
-      <label>Disposición
-        <select id="preset"></select>
-      </label>
-      <label>Objetivo
-        <select id="mode">
-          <option value="color">Colores (cada cara de un color)</option>
-          <option value="numerado">Numerado (cada pieza en su sitio)</option>
-        </select>
-      </label>
-
-      <p id="info" class="info"></p>
 
       <details class="help">
         <summary>Cómo se juega</summary>
         <ul>
+          <li>Objetivo: recuperar el cubo con las caras superiores amarillas, las izquierdas verdes y las derechas rojas.</li>
           <li>Mueve el puntero: la herramienta de 3 piezas se ajusta al punto de convergencia más cercano.</li>
           <li>Verde: tres rombos forman un cubito y se pueden girar. Rojo: giro bloqueado.</li>
-          <li>El único movimiento es girar 60°: clic = horario, Mayús+clic o clic derecho = antihorario. Para girar más, vuelve a girar.</li>
+          <li>Clic: gira el grupo 60° en sentido horario. Para girar más, vuelve a hacer clic.</li>
           <li>Cada giro cambia el patrón: un cubito que sobresale pasa a ser un rincón y viceversa.</li>
-          <li>Táctil: toca para seleccionar y vuelve a tocar para girar 60°.</li>
-          <li>Teclado: flechas para mover la selección, E/Enter = 60° horario, Q = 60° antihorario, Ctrl+Z / Ctrl+Y.</li>
-          <li>Objetivo: recuperar la forma inicial con las caras superiores blancas, las izquierdas verdes y las derechas rojas.</li>
+          <li>Táctil: toca para seleccionar y vuelve a tocar para girar.</li>
+          <li>Teclado: flechas para mover la selección, E o Enter para girar, Ctrl+Z / Ctrl+Y para deshacer y rehacer.</li>
         </ul>
       </details>
     </aside>

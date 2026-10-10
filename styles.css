@@ -157,11 +157,44 @@ button { cursor: pointer; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.45; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.group > button.rotate { flex: 2; }
+
+/* Botones de icono con ayuda emergente (atajo de teclado) al pasar el ratón. */
+button.icon { position: relative; flex: 0 0 auto; display: grid; place-items: center; width: 42px; padding: 0; }
+button.icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+button.icon[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 2;
+}
+/* El último botón del panel alinea la ayuda a la derecha para no salirse de la pantalla. */
+button.icon:last-child[data-tip]::after { left: auto; right: 0; transform: none; }
+button.icon[data-tip]:hover::after,
+button.icon[data-tip]:focus-visible::after { opacity: 1; }
 button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
 
-.info { margin: 0; font-size: 0.82rem; color: var(--muted); }
 .help { font-size: 0.85rem; }
 .help summary { cursor: pointer; font-weight: 600; }
 .help ul { padding-left: 18px; margin: 8px 0 0; }
