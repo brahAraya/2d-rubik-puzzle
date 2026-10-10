@@ -81,9 +81,11 @@
 
       this.slotLayer = el('g', { class: 'slots' }, svg);
       this.labelLayer = el('g', { class: 'labels' }, svg);
+      // El borde exterior va debajo de las piezas en movimiento y de la
+      // herramienta de selección, para que sus contornos se vean completos.
+      el('path', { d: pathFrom(outline), class: 'board-outline' }, svg);
       this.animLayer = el('g', { class: 'anim' }, svg);
       this.toolLayer = el('g', { class: 'tool', 'aria-hidden': 'true' }, svg);
-      el('path', { d: pathFrom(outline), class: 'board-outline' }, svg);
 
       // La identidad de cada casilla es estable; su geometría cambia con los volteos.
       this.slotEls = puzzle.target.slots.map((s) => el('path', { class: 'slot orient-' + s.orient }, this.slotLayer));
