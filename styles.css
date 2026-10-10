@@ -9,7 +9,7 @@
   --bad: #e11d48;
   /* Selector: azul si se puede girar, gris neutro si no. Ninguno de los dos
      coincide con los colores del cubo (amarillo, verde y rojo). */
-  --sel-ok: #1f6feb;
+  --sel-ok: #6494aa;
   --sel-bad: #a9aeb7;
   --edge: #151515;
   --outline: #151515; /* borde exterior del cubo; --edge: líneas entre fichas */
@@ -36,7 +36,7 @@
     --accent: #58a6ff;
     --hole: #0c0d0f;
     --on-accent: #0d1117;
-    --sel-ok: #58a6ff;
+    --sel-ok: #6494aa;
     --sel-bad: #a9aeb7;
     --outline: #151515;
     --edge: #151515;
@@ -58,7 +58,7 @@
   --accent: #58a6ff;
   --hole: #0c0d0f;
   --on-accent: #0d1117;
-  --sel-ok: #58a6ff;
+  --sel-ok: #6494aa;
   --sel-bad: #a9aeb7;
   --outline: #151515;
   --edge: #151515;
