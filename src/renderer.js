@@ -210,11 +210,23 @@
     }
 
     _applyViewTransform(deg) {
+      this.viewDeg = deg;
       const tf = deg % 360 === 0 ? null : `rotate(${deg} 0 0)`;
       for (const g of [this.world, this.overLayer]) {
         if (tf) g.setAttribute('transform', tf);
         else g.removeAttribute('transform');
       }
+      this._uprightArrow();
+    }
+
+    // La flecha del selector indica el sentido del giro en pantalla: deshace
+    // el giro del tablero para verse siempre igual, en cualquier orientación.
+    _uprightArrow() {
+      const st = this.toolState;
+      if (!st || !this.toolArrow) return;
+      const deg = this.viewDeg || 0;
+      if (deg % 360 === 0) this.toolArrow.removeAttribute('transform');
+      else this.toolArrow.setAttribute('transform', `rotate(${-deg} ${st.cx * SCALE} ${st.cy * SCALE})`);
     }
 
     /** Fija el giro del tablero sin animar (al cargar una partida). */
@@ -418,6 +430,7 @@
       const a1 = a0 + sweep + 0.5;
       this.toolArrow.setAttribute('d', `M${cx + rad * Math.cos(a0)} ${cy + rad * Math.sin(a0)}A${rad} ${rad} 0 0 1 ${cx + rad * Math.cos(a1)} ${cy + rad * Math.sin(a1)}`);
       this.toolArrow.style.opacity = String(Math.max(0, 1 - 2 * st.bad));
+      this._uprightArrow();
       // Color: mezcla continua entre verde (válido) y rojo (bloqueado).
       this.toolLayer.style.setProperty('--mix', (st.bad * 100).toFixed(1) + '%');
       this.toolLayer.classList.toggle('blocked', st.bad > 0.5);
