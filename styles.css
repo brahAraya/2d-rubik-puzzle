@@ -11,8 +11,8 @@
      coincide con los colores del cubo (amarillo, verde y rojo). */
   --sel-ok: #1f6feb;
   --sel-bad: #a9aeb7;
-  --edge: #2a2c32;
-  --outline: #2a2c32; /* borde exterior del cubo; --edge: líneas entre fichas */
+  --edge: #151515;
+  --outline: #151515; /* borde exterior del cubo; --edge: líneas entre fichas */
   --piece-dim: 1; /* factor de luz de las fichas (lo lee el renderer) */
   --hole: #2a2d33;
   --on-accent: #ffffff;
@@ -38,8 +38,8 @@
     --on-accent: #0d1117;
     --sel-ok: #58a6ff;
     --sel-bad: #a9aeb7;
-    --outline: #000000;
-    --edge: #000000;
+    --outline: #151515;
+    --edge: #151515;
     --piece-dim: 1;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
@@ -60,8 +60,8 @@
   --on-accent: #0d1117;
   --sel-ok: #58a6ff;
   --sel-bad: #a9aeb7;
-  --outline: #000000;
-  --edge: #000000;
+  --outline: #151515;
+  --edge: #151515;
   --piece-dim: 1;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
