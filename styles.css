@@ -13,8 +13,8 @@
      coincide con los colores del cubo (amarillo, verde y rojo). */
   --sel-ok: #6494aa;
   --sel-bad: #a9aeb7;
-  --edge: #151515;
-  --outline: #151515; /* borde exterior del cubo; --edge: líneas entre fichas */
+  --edge: #141301;
+  --outline: #141301; /* borde exterior del cubo; --edge: líneas entre fichas */
   --piece-dim: 1; /* factor de luz de las fichas (lo lee el renderer) */
   /* Colores de las fichas (los lee el renderer): amarillo, verde y rojo. */
   --piece-0: #e9b872;
@@ -34,7 +34,7 @@
 /* Tema oscuro: el del sistema si el usuario no eligió, o el elegido con el botón. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #15171b;
+    --bg: #141301;
     --panel: #1e2126;
     --ink: #eceef2;
     --muted: #9aa0aa;
@@ -48,8 +48,8 @@
     --on-accent: #ffffff;
     --sel-ok: #73d2de;
     --sel-bad: #a9aeb7;
-    --outline: #151515;
-    --edge: #151515;
+    --outline: #141301;
+    --edge: #141301;
     --piece-dim: 1;
     /* Modo oscuro: paleta propia de las fichas. */
     --piece-0: #f9dc5c;
@@ -63,7 +63,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #15171b;
+  --bg: #141301;
   --panel: #1e2126;
   --ink: #eceef2;
   --muted: #9aa0aa;
@@ -76,8 +76,8 @@
   --on-accent: #ffffff;
   --sel-ok: #73d2de;
   --sel-bad: #a9aeb7;
-  --outline: #151515;
-  --edge: #151515;
+  --outline: #141301;
+  --edge: #141301;
   --piece-dim: 1;
   --piece-0: #f9dc5c;
   --piece-1: #008148;
@@ -268,8 +268,8 @@ button.with-icon svg {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 170%;
-  height: 170%;
+  width: 200%;
+  height: 200%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   opacity: 0.55;

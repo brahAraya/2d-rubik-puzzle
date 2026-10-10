@@ -160,7 +160,7 @@
       // Resplandor dinámico: un SVG hermano, detrás del tablero y más grande
       // (para que el desenfoque no se recorte), con una copia desenfocada y
       // ampliada de las fichas. Comparte escala y centro con el tablero.
-      const GLOW_PAD = 1.7;
+      const GLOW_PAD = 2;
       if (!this.glowSvg) {
         this.glowSvg = document.createElementNS(SVG_NS, 'svg');
         this.glowSvg.setAttribute('class', 'glow-svg');
@@ -173,9 +173,9 @@
       gs.setAttribute('viewBox', [-gr, -gr, 2 * gr, 2 * gr].join(' '));
       const gdefs = el('defs', {}, gs);
       const blur = el('filter', { id: 'glow-blur', x: '-50%', y: '-50%', width: '200%', height: '200%' }, gdefs);
-      el('feGaussianBlur', { stdDeviation: (n * SCALE * 0.14).toFixed(1) }, blur);
+      el('feGaussianBlur', { stdDeviation: (n * SCALE * 0.2).toFixed(1) }, blur);
       this.glowWorld = el('g', {}, gs);
-      this.glowLayer = el('g', { class: 'glow', filter: 'url(#glow-blur)', transform: 'scale(1.1)' }, this.glowWorld);
+      this.glowLayer = el('g', { class: 'glow', filter: 'url(#glow-blur)', transform: 'scale(1.22)' }, this.glowWorld);
       el('path', { d: pathFrom(outline), class: 'board-shadow' }, this.world);
       this.slotLayer = el('g', { class: 'slots' }, this.world);
       this.labelLayer = el('g', { class: 'labels' }, this.world);
