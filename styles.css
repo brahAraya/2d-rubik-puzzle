@@ -209,7 +209,7 @@ button.with-icon svg {
 
 .sep {
   width: 100%;
-  margin: 10px 0;
+  margin: 16px 0;
   border: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--line) 15%, var(--line) 85%, transparent);
@@ -424,7 +424,7 @@ button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); o
 
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
 
-.help { font-size: 0.85rem; }
+.help { font-size: 0.85rem; margin-top: 8px; }
 .help summary {
   display: flex;
   align-items: center;
