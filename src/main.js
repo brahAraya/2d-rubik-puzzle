@@ -217,34 +217,43 @@
     selectVertex(v);
   }
 
-  function selectHex(hexId) {
-    const h = puzzle.hexagons[hexId];
-    if (h) selectVertex(puzzle.tiling.vertices.find((v) => v.key === h.key));
-  }
 
-  // Selección por teclado: salta al cubito más cercano en la dirección pedida.
+  /*
+   * Selección por teclado. Las flechas recorren TODOS los puntos de
+   * convergencia (igual que el ratón), no sólo los cubitos girables:
+   *  - arriba/abajo: al vértice de encima o de debajo (distancia 1);
+   *  - izquierda/derecha: a la columna vecina (√3/2 en horizontal), eligiendo
+   *    entre los dos vértices posibles el más cercano a la fila de partida,
+   *    así un movimiento horizontal hace un zigzag que no se desvía.
+   * Todo se calcula en coordenadas de pantalla, con el tablero girado.
+   */
+  let navAnchor = null; // { key, y }: fila de referencia para el zigzag horizontal
+
   function moveSelection(dx, dy) {
-    const hs = puzzle.hexagons;
-    if (!hs.length) return;
-    if (selectedHex() < 0) return selectHex(puzzle.nearestHexagon(0, 0));
-    // Las flechas son direcciones de pantalla: las pasamos al tablero sin girar.
-    [dx, dy] = ProppCore.rotatePoint([dx, dy], [0, 0], (-view.viewTurns * Math.PI) / 3);
-    const c = hs[selectedHex()].center;
-    let best = -1;
-    let bestScore = Infinity;
-    for (const h of hs) {
-      const vx = h.center[0] - c[0];
-      const vy = h.center[1] - c[1];
-      const along = vx * dx + vy * dy;
-      if (along < 1e-6) continue;
-      const across = Math.abs(vx * dy - vy * dx);
-      const score = along + 2 * across;
-      if (score < bestScore) {
-        bestScore = score;
-        best = h.id;
-      }
+    const angle = (view.viewTurns * Math.PI) / 3;
+    const verts = puzzle.tiling.vertices.map((v) => ({ v, p: ProppCore.rotatePoint(v.point, [0, 0], angle) }));
+    const near = (a, b) => Math.abs(a - b) < 1e-6;
+    let cur = selectedKey === null ? null : verts.find((x) => x.v.key === selectedKey);
+    if (!cur) {
+      const center = verts.find((x) => near(x.p[0], 0) && near(x.p[1], 0)) || verts[0];
+      selectVertex(center.v);
+      navAnchor = { key: center.v.key, y: center.p[1] };
+      return;
     }
-    if (best >= 0) selectHex(best);
+    if (!navAnchor || navAnchor.key !== selectedKey) navAnchor = { key: selectedKey, y: cur.p[1] };
+    let next = null;
+    if (dy) {
+      next = verts.find((x) => near(x.p[0], cur.p[0]) && near(x.p[1], cur.p[1] + dy));
+      if (next) navAnchor.y = next.p[1];
+    } else {
+      const tx = cur.p[0] + (dx * Math.sqrt(3)) / 2;
+      const cands = verts.filter((x) => near(x.p[0], tx) && near(Math.abs(x.p[1] - cur.p[1]), 0.5));
+      cands.sort((a, b) => Math.abs(a.p[1] - navAnchor.y) - Math.abs(b.p[1] - navAnchor.y) || a.p[1] - b.p[1]);
+      next = cands[0] || null;
+    }
+    if (!next) return;
+    selectVertex(next.v);
+    navAnchor.key = next.v.key;
   }
 
   /* ---------------- Eventos ---------------- */
