@@ -332,7 +332,10 @@ button.with-icon svg {
 
 .slot { stroke: var(--edge); stroke-width: 1.4; stroke-linejoin: round; }
 .slot.fixed { stroke-dasharray: 3 3; }
-.slot.hole { fill: var(--hole) !important; }
+/* Hueco que dejan las fichas mientras giran: transparente y sin líneas, para
+   que se vea el fondo oscuro del tablero (board-shadow) y sólo los bordes de
+   las fichas vecinas. */
+.slot.hole { fill: transparent !important; stroke: none; }
 .slot.moving { pointer-events: none; }
 
 .label {
