@@ -1,9 +1,7 @@
 # Propp Lozenge
 
 > **🤖 Vibe coded.** Este proyecto se hizo con IA generativa: el código lo
-> escribió un asistente de IA. Lo avisamos desde el principio para que quien
-> prefiera no usar ni apoyar obras hechas con IA pueda decidir enseguida si
-> sigue o no.
+> escribió un asistente de IA.
 
 *[English](README.md)*
 
