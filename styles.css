@@ -396,7 +396,77 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 }
 .help[open]:not(.closing) summary::before { transform: rotate(90deg); }
 .help-body { overflow: hidden; }
-.help ul { padding-left: 18px; margin: 8px 0 0; }
+/* Instrucciones: objetivo destacado, pasos numerados y atajos como teclas. */
+.help-body > :first-child { margin-top: 12px; }
+.help h3 {
+  margin: 16px 0 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.help-goal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+.help-goal p { margin: 0; line-height: 1.45; }
+.swatches { display: grid; grid-template-columns: repeat(3, 10px); gap: 3px; flex: none; }
+.swatches i { width: 10px; height: 22px; border-radius: 3px; }
+.sw-y { background: #ffd000; }
+.sw-g { background: #009e60; }
+.sw-r { background: #d62839; }
+.help-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
+.help-steps li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  column-gap: 10px;
+  line-height: 1.4;
+  counter-increment: step;
+}
+.help-steps li::before {
+  content: counter(step);
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.help-steps strong { color: var(--ink); }
+.help-steps span { color: var(--muted); }
+.help-keys {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px 12px;
+  align-items: center;
+  margin: 0;
+}
+.help-keys dt { display: flex; gap: 3px; white-space: nowrap; }
+.help-keys dd { margin: 0; color: var(--muted); line-height: 1.35; }
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--ink);
+  font: 600 0.72rem/1.5 inherit;
+  font-family: inherit;
+  text-align: center;
+}
+.help-note { margin: 14px 0 2px; font-size: 0.78rem; color: var(--muted); }
 
 /* Notas bajo el panel: aviso de IA y créditos. */
 .note { display: block; padding: 0 4px; font-size: 0.75rem; line-height: 1.4; color: var(--muted); }
