@@ -140,7 +140,7 @@
 
   function startRandom() {
     puzzle.randomize();
-    view.sync();
+    view.showState();
     resetTimer();
     say(t('status.random'));
   }
@@ -317,7 +317,7 @@
   // animado y por el camino más corto, hasta la orientación original.
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
-    view.sync();
+    view.showState();
     view.resetView();
     resetTimer();
   });

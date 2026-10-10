@@ -235,12 +235,23 @@
       if (!this.animating) this._next();
     }
 
-    /** Vuelve a la orientación original por el camino más corto (animado). */
+    /**
+     * Vuelve a la orientación original por el camino más corto (animado).
+     * Se encola: los pasos se calculan cuando le toca, así que respeta los
+     * giros que ya estuvieran en marcha en lugar de interrumpirlos.
+     */
     resetView() {
-      // La orientación final es la que queda tras los giros ya en cola.
-      const pending = this.queue.reduce((acc, j) => acc + (j.type === 'view' ? j.steps : 0), 0);
-      const v = (((this.viewTurns + pending) % 6) + 6) % 6;
-      this.rotateView(v <= 3 ? -v : 6 - v);
+      this.queue.push({ type: 'view', toZero: true });
+      if (!this.animating) this._next();
+    }
+
+    /**
+     * Muestra el estado actual del motor (nueva partida, restablecer) después
+     * de terminar las animaciones pendientes, sin cortarlas.
+     */
+    showState() {
+      this.queue.push({ type: 'snap', snap: this._current() });
+      if (!this.animating) this._next();
     }
 
     _animateView(steps) {
@@ -450,7 +461,20 @@
         return;
       }
       this.animating = true;
-      if (job.type === 'view') return this._animateView(job.steps);
+      if (job.type === 'snap') {
+        this.display = job.snap;
+        this.paint();
+        return this._next();
+      }
+      if (job.type === 'view') {
+        let steps = job.steps;
+        if (job.toZero) {
+          const v = this.viewTurns;
+          steps = v <= 3 ? -v : 6 - v;
+        }
+        if (!steps) return this._next();
+        return this._animateView(steps);
+      }
       const p = this.puzzle;
       const c = job.center;
       const steps60 = Math.round(Math.abs(job.angle) / (Math.PI / 3));
