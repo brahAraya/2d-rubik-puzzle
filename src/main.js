@@ -372,38 +372,32 @@
   /* ---------------- Instrucciones desplegables ---------------- */
 
   // <details> no anima su apertura: animamos la altura del contenido a mano.
-  const help = document.querySelector('.help');
-  const helpBody = help.querySelector('.help-body');
-  let helpAnim = null;
-  // En escritorio las instrucciones van fijas y siempre abiertas en la barra.
-  const desktopQuery = window.matchMedia('(min-width: 761px)');
-  function syncHelpPin() {
-    const pinned = desktopQuery.matches;
-    help.classList.toggle('pinned', pinned);
-    if (pinned) help.open = true;
-  }
-  syncHelpPin();
-  if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', syncHelpPin);
-
-  help.querySelector('summary').addEventListener('click', (e) => {
-    if (help.classList.contains('pinned')) return e.preventDefault();
-    if (reduceMotion || !helpBody.animate) return;
-    e.preventDefault();
-    if (helpAnim) helpAnim.cancel();
-    const opening = !help.open;
-    const startHeight = opening ? 0 : helpBody.offsetHeight;
-    help.open = true;
-    const endHeight = opening ? helpBody.scrollHeight : 0;
-    help.classList.toggle('closing', !opening);
-    helpAnim = helpBody.animate(
-      [{ height: startHeight + 'px', opacity: opening ? 0 : 1 }, { height: endHeight + 'px', opacity: opening ? 1 : 0 }],
-      { duration: 260, easing: 'ease' }
-    );
-    helpAnim.onfinish = () => {
-      helpAnim = null;
-      help.classList.remove('closing');
-      if (!opening) help.open = false;
-    };
+  // Secciones desplegables de las instrucciones («Cómo jugar» y «Atajos»).
+  // <details> no anima su apertura: animamos la altura del contenido a mano.
+  // Al cargar la página empiezan siempre plegadas (no se guarda su estado).
+  document.querySelectorAll('.help-section').forEach((section) => {
+    const body = section.querySelector('.help-body');
+    let anim = null;
+    section.open = false;
+    section.querySelector('summary').addEventListener('click', (e) => {
+      if (reduceMotion || !body.animate) return;
+      e.preventDefault();
+      if (anim) anim.cancel();
+      const opening = !section.open;
+      const startHeight = opening ? 0 : body.offsetHeight;
+      section.open = true;
+      const endHeight = opening ? body.scrollHeight : 0;
+      section.classList.toggle('closing', !opening);
+      anim = body.animate(
+        [{ height: startHeight + 'px', opacity: opening ? 0 : 1 }, { height: endHeight + 'px', opacity: opening ? 1 : 0 }],
+        { duration: 240, easing: 'ease' }
+      );
+      anim.onfinish = () => {
+        anim = null;
+        section.classList.remove('closing');
+        if (!opening) section.open = false;
+      };
+    });
   });
 
   /* ---------------- HUD ---------------- */

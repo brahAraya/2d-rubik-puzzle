@@ -86,34 +86,39 @@
           <span data-i18n="new">Nuevo estado aleatorio</span>
         </button>
 
-        <hr class="sep sep-help">
+        <hr class="sep">
 
-        <details class="help">
-          <summary data-i18n="help.title">Cómo se juega</summary>
-          <div class="help-body">
-            <div class="help-goal">
-              <span class="swatches" aria-hidden="true"><i class="sw-y"></i><i class="sw-g"></i><i class="sw-r"></i></span>
-              <p><strong data-i18n="help.goal.title"></strong> <span data-i18n="help.goal.text"></span></p>
-            </div>
-
-            <h3 data-i18n="help.steps"></h3>
-            <ol class="help-steps">
-              <li><strong data-i18n="help.s1.title"></strong><span data-i18n="help.s1.text"></span></li>
-              <li><strong data-i18n="help.s2.title"></strong><span data-i18n="help.s2.text"></span></li>
-              <li><strong data-i18n="help.s3.title"></strong><span data-i18n="help.s3.text"></span></li>
-            </ol>
-
-            <h3 data-i18n="help.keys.title"></h3>
-            <dl class="help-keys">
-              <dt><kbd data-i18n="key.click"></kbd><span class="kbd-or" aria-hidden="true">/</span><kbd>E</kbd></dt><dd data-i18n="help.k.rotate"></dd>
-              <dt><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></dt><dd data-i18n="help.k.move"></dd>
-              <dt><kbd>R</kbd></dt><dd data-i18n="help.k.board"></dd>
-              <dt><kbd data-i18n="key.undo"></kbd></dt><dd data-i18n="undo"></dd>
-              <dt><kbd data-i18n="key.redo"></kbd></dt><dd data-i18n="redo"></dd>
-            </dl>
-            <p class="help-note" data-i18n="help.touch"></p>
+        <div class="help">
+          <div class="help-goal">
+            <span class="swatches" aria-hidden="true"><i class="sw-y"></i><i class="sw-g"></i><i class="sw-r"></i></span>
+            <p><strong data-i18n="help.goal.title"></strong> <span data-i18n="help.goal.text"></span></p>
           </div>
-        </details>
+
+          <details class="help-section" id="how">
+            <summary data-i18n="help.steps">Cómo jugar</summary>
+            <div class="help-body">
+              <ol class="help-steps">
+                <li><strong data-i18n="help.s1.title"></strong><span data-i18n="help.s1.text"></span></li>
+                <li><strong data-i18n="help.s2.title"></strong><span data-i18n="help.s2.text"></span></li>
+                <li><strong data-i18n="help.s3.title"></strong><span data-i18n="help.s3.text"></span></li>
+              </ol>
+              <p class="help-note" data-i18n="help.touch"></p>
+            </div>
+          </details>
+
+          <details class="help-section" id="keys">
+            <summary data-i18n="help.keys.title">Atajos</summary>
+            <div class="help-body">
+              <dl class="help-keys">
+                <dt><kbd data-i18n="key.click"></kbd><span class="kbd-or" aria-hidden="true">/</span><kbd>E</kbd></dt><dd data-i18n="help.k.rotate"></dd>
+                <dt><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></dt><dd data-i18n="help.k.move"></dd>
+                <dt><kbd>R</kbd></dt><dd data-i18n="help.k.board"></dd>
+                <dt><kbd data-i18n="key.undo"></kbd></dt><dd data-i18n="undo"></dd>
+                <dt><kbd data-i18n="key.redo"></kbd></dt><dd data-i18n="redo"></dd>
+              </dl>
+            </div>
+          </details>
+        </div>
       </aside>
       <small class="note" data-i18n="vibe"></small>
       <small class="note">
