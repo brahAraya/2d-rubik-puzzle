@@ -15,8 +15,8 @@
   /* Gradientes sutiles de la página (el cubo no los usa). */
   --panel-2: #f8f6f1;
   --accent-2: #6d5dfc;
-  --glow-1: rgba(31, 111, 235, 0.20);
-  --glow-2: rgba(109, 93, 252, 0.17);
+  --glow-1: rgba(31, 111, 235, 0.32);
+  --glow-2: rgba(109, 93, 252, 0.28);
 }
 
 /* Tema oscuro: el del sistema si el usuario no eligió, o el elegido con el botón. */
@@ -35,8 +35,8 @@
     --piece-dim: 0.8;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
-    --glow-1: rgba(88, 166, 255, 0.17);
-    --glow-2: rgba(157, 140, 255, 0.14);
+    --glow-1: rgba(88, 166, 255, 0.36);
+    --glow-2: rgba(157, 140, 255, 0.30);
     color-scheme: dark;
   }
 }
@@ -54,8 +54,8 @@
   --piece-dim: 0.8;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
-  --glow-1: rgba(88, 166, 255, 0.17);
-  --glow-2: rgba(157, 140, 255, 0.14);
+  --glow-1: rgba(88, 166, 255, 0.36);
+  --glow-2: rgba(157, 140, 255, 0.30);
   color-scheme: dark;
 }
 
@@ -74,8 +74,8 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(ellipse 70% 60% at 5% 0%, var(--glow-1), transparent 70%),
-    radial-gradient(ellipse 70% 60% at 100% 100%, var(--glow-2), transparent 70%),
+    radial-gradient(ellipse 85% 75% at 0% 0%, var(--glow-1), transparent 72%),
+    radial-gradient(ellipse 85% 75% at 100% 100%, var(--glow-2), transparent 72%),
     var(--bg);
 }
 
@@ -350,7 +350,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 
 /* Cambio de tema: fundido de toda la página (View Transitions API). */
 ::view-transition-old(root),
-::view-transition-new(root) { animation-duration: 0.2s; animation-timing-function: ease; }
+::view-transition-new(root) { animation-duration: 0.12s; animation-timing-function: ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
