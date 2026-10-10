@@ -15,8 +15,10 @@
   /* Gradientes sutiles de la página (el cubo no los usa). */
   --panel-2: #f8f6f1;
   --accent-2: #6d5dfc;
-  --glow-1: rgba(31, 111, 235, 0.32);
-  --glow-2: rgba(109, 93, 252, 0.28);
+  /* Halos del fondo con los colores del cubo (amarillo, verde y rojo). */
+  --glow-1: rgba(255, 208, 0, 0.30);
+  --glow-2: rgba(0, 158, 96, 0.20);
+  --glow-3: rgba(214, 40, 57, 0.18);
 }
 
 /* Tema oscuro: el del sistema si el usuario no eligió, o el elegido con el botón. */
@@ -35,8 +37,9 @@
     --piece-dim: 0.8;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
-    --glow-1: rgba(88, 166, 255, 0.36);
-    --glow-2: rgba(157, 140, 255, 0.30);
+    --glow-1: rgba(255, 208, 0, 0.16);
+    --glow-2: rgba(0, 158, 96, 0.22);
+    --glow-3: rgba(214, 40, 57, 0.22);
     color-scheme: dark;
   }
 }
@@ -54,8 +57,9 @@
   --piece-dim: 0.8;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
-  --glow-1: rgba(88, 166, 255, 0.36);
-  --glow-2: rgba(157, 140, 255, 0.30);
+  --glow-1: rgba(255, 208, 0, 0.16);
+  --glow-2: rgba(0, 158, 96, 0.22);
+  --glow-3: rgba(214, 40, 57, 0.22);
   color-scheme: dark;
 }
 
@@ -74,8 +78,9 @@
 html {
   min-height: 100%;
   background:
-    radial-gradient(ellipse 85% 75% at 0% 0%, var(--glow-1), transparent 72%),
-    radial-gradient(ellipse 85% 75% at 100% 100%, var(--glow-2), transparent 72%),
+    radial-gradient(ellipse 70% 65% at 0% 0%, var(--glow-1), transparent 72%),
+    radial-gradient(ellipse 70% 65% at 0% 100%, var(--glow-2), transparent 72%),
+    radial-gradient(ellipse 70% 65% at 100% 100%, var(--glow-3), transparent 72%),
     var(--bg);
 }
 
