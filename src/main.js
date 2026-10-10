@@ -6,6 +6,9 @@
 
   const { ProppPuzzle } = ProppCore;
   const { solidCube } = ProppPresets;
+  const { t } = ProppI18n;
+  const LANG_KEY = 'propp-lang';
+  const THEME_KEY = 'propp-theme';
   const STORAGE_KEY = 'propp-lozenge-v4';
   // Único movimiento: girar el grupo de 3 rombos 60° en sentido horario.
   const MOVE = 'cw60';
@@ -13,15 +16,78 @@
 
   const $ = (id) => document.getElementById(id);
   const ui = {
-    board: $('board'), moves: $('moves'), time: $('time'), progress: $('progress'), parity: $('parity'),
+    board: $('board'), moves: $('moves'), time: $('time'), parity: $('parity'),
     status: $('status'), win: $('win'), winDetail: $('win-detail'), size: $('size'),
+    lang: $('lang'), theme: $('theme'), undo: $('undo'), redo: $('redo'),
   };
 
-  // Atajos de teclado en las ayudas emergentes (⌘ en Mac).
-  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
-    $('undo').dataset.tip = 'Deshacer · ⌘Z';
-    $('redo').dataset.tip = 'Rehacer · ⌘⇧Z';
+  // Atajos de teclado que se muestran en las ayudas emergentes (⌘ en Mac).
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const KEYS = isMac ? { undo: '⌘Z', redo: '⌘⇧Z' } : { undo: 'Ctrl+Z', redo: 'Ctrl+Y' };
+
+  function storageGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null;
+    }
   }
+
+  function storageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (_) {
+      /* almacenamiento no disponible: se ignora */
+    }
+  }
+
+  /* ---------------- Idioma ---------------- */
+
+  function setLanguage(lang) {
+    ProppI18n.setLang(lang);
+    ui.lang.value = ProppI18n.lang;
+    ProppI18n.apply(document, KEYS);
+    ui.undo.setAttribute('aria-label', t('undo'));
+    ui.undo.dataset.tip = t('undo') + ' · ' + KEYS.undo;
+    ui.redo.setAttribute('aria-label', t('redo'));
+    ui.redo.dataset.tip = t('redo') + ' · ' + KEYS.redo;
+    updateThemeButton();
+    if (puzzle) {
+      updateHud();
+      if (won) showWinDetail();
+    }
+    ui.status.textContent = '';
+  }
+
+  ui.lang.addEventListener('change', () => {
+    storageSet(LANG_KEY, ui.lang.value);
+    setLanguage(ui.lang.value);
+  });
+
+  /* ---------------- Tema claro / oscuro ---------------- */
+
+  const darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  // Tema efectivo: el elegido por el usuario o, si no eligió, el del sistema.
+  function currentTheme() {
+    const forced = document.documentElement.dataset.theme;
+    if (forced === 'light' || forced === 'dark') return forced;
+    return darkQuery && darkQuery.matches ? 'dark' : 'light';
+  }
+
+  function updateThemeButton() {
+    const label = currentTheme() === 'dark' ? t('theme.toLight') : t('theme.toDark');
+    ui.theme.setAttribute('aria-label', label);
+    ui.theme.dataset.tip = label;
+  }
+
+  ui.theme.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    storageSet(THEME_KEY, next);
+    updateThemeButton();
+  });
+  if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', updateThemeButton);
 
   const view = new ProppView.BoardView(ui.board, {
     duration: reduceMotion ? 0 : 280,
@@ -63,7 +129,7 @@
     puzzle.randomize();
     view.sync();
     resetTimer();
-    say('Estado aleatorio generado (paridad verificada).');
+    say(t('status.random'));
   }
 
   function resetTimer() {
@@ -82,7 +148,7 @@
   function act() {
     const res = puzzle.move(selectedHex(), MOVE);
     if (!res.ok) {
-      blocked(res.reason);
+      blocked(res);
       return false;
     }
     if (!timer.running && !won) {
@@ -96,20 +162,21 @@
 
   function undo() {
     const tr = puzzle.undo();
-    if (!tr) return say('No hay movimientos que deshacer.');
+    if (!tr) return say(t('status.noUndo'));
     view.enqueue(tr);
     refreshSelection();
   }
 
   function redo() {
     const tr = puzzle.redo();
-    if (!tr) return say('No hay movimientos que rehacer.');
+    if (!tr) return say(t('status.noRedo'));
     view.enqueue(tr);
     refreshSelection();
   }
 
-  function blocked(reason) {
-    say('Movimiento bloqueado: ' + reason, true);
+  function blocked(res) {
+    const key = 'reason.' + res.code;
+    say(t('status.blocked', { reason: ProppI18n.STRINGS.es[key] ? t(key) : res.reason }), true);
     if (view.selection) {
       view.setSelection(Object.assign({}, view.selection, { shake: true }));
       setTimeout(() => view.selection && view.setSelection(Object.assign({}, view.selection, { shake: false })), 350);
@@ -121,9 +188,13 @@
     won = true;
     timer.elapsed = performance.now() - timer.start;
     timer.running = false;
-    ui.winDetail.textContent = puzzle.moveCount + ' movimientos · ' + fmtTime(timer.elapsed);
+    showWinDetail();
     ui.win.hidden = false;
     updateHud();
+  }
+
+  function showWinDetail() {
+    ui.winDetail.textContent = t('win.detail', { moves: puzzle.moveCount, time: fmtTime(timer.elapsed) });
   }
 
   /* ---------------- Selección ---------------- */
@@ -134,12 +205,10 @@
     if (!v || quiet) return;
     if (v.hex < 0) {
       const n = v.slots.length;
-      say(n === 3
-        ? 'Aquí convergen 3 rombos, pero no con sus ángulos de 120°: no forman un cubito.'
-        : 'Aquí convergen ' + n + ' rombos: no forman un cubito de 3 piezas.', true, true);
+      say(n === 3 ? t('status.three') : t('status.many', { n }), true, true);
     } else {
       const h = puzzle.hexagons[v.hex];
-      say('Cubito ' + h.kind + ' seleccionado · clic para girar 60°', false, true);
+      say(t(h.kind === 'convexo' ? 'status.selected.convex' : 'status.selected.concave'), false, true);
     }
   }
 
@@ -243,17 +312,10 @@
     }
   });
 
-  $('rot-cw').addEventListener('click', act);
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
   $('win-new').addEventListener('click', startRandom);
-  $('scramble').addEventListener('click', () => {
-    puzzle.scramble(30);
-    view.sync();
-    resetTimer();
-    say('Mezclado con 30 giros aleatorios de 60°.');
-  });
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
     view.sync();
@@ -270,9 +332,8 @@
 
   function updateHud() {
     ui.moves.textContent = puzzle.moveCount;
-    ui.progress.textContent = Math.round(puzzle.progress() * 100) + '%';
     const a = puzzle.analyze();
-    ui.parity.textContent = a.solvable ? 'par ✓' : 'imposible ✗';
+    ui.parity.textContent = a.solvable ? t('parity.even') : t('parity.bad');
     ui.parity.classList.toggle('bad', !a.solvable);
     $('undo').disabled = !puzzle.canUndo();
     $('redo').disabled = !puzzle.canRedo();
@@ -294,16 +355,12 @@
   /* ---------------- Persistencia ---------------- */
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: puzzle.serialize(), elapsed: timer.elapsed }));
-    } catch (_) {
-      /* almacenamiento no disponible: se ignora */
-    }
+    storageSet(STORAGE_KEY, JSON.stringify({ state: puzzle.serialize(), elapsed: timer.elapsed }));
   }
 
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = storageGet(STORAGE_KEY);
       if (!raw) return false;
       const data = JSON.parse(raw);
       // deserialize valida la forma, la paridad y el historial guardados.
@@ -316,6 +373,7 @@
     }
   }
 
+  setLanguage(ProppI18n.detect(storageGet(LANG_KEY), navigator.languages || [navigator.language]));
   if (!load()) {
     newPuzzle(3);
     startRandom();

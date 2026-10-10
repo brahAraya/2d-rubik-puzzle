@@ -5,6 +5,12 @@
 A browser version of **Propp Lozenge**, a flat puzzle that looks like a 3D cube.
 It is written in vanilla HTML, CSS and JavaScript, with no dependencies.
 
+🛒 **Get the physical puzzle:** [Propp Lozenge on Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+
+> **⚠️ Vibe coded.** This game was programmed with the help of an AI
+> assistant. It works and is tested, but it was not written line by line by a
+> human, so expect rough edges.
+
 ## The puzzle
 
 Propp Lozenge is a magnetic tile puzzle invented by **James (Jim) Propp** and
@@ -43,6 +49,9 @@ Open `index.html` in a browser. No build step or server is needed.
 - **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates.
 - **Undo / redo:** use the icon buttons (hover over them to see the shortcut),
   or `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` on a Mac).
+- **Language and theme:** the header has a language picker (Spanish or
+  English) and a light/dark mode button. Both choices are remembered. On the
+  first visit the game follows the browser language and the system theme.
 
 Each new game starts from a random arrangement, like taking every tile out of
 the frame and putting them back at random. The game is saved in the browser,
@@ -80,6 +89,7 @@ npm test   # engine tests (node:test, no dependencies)
 ```
 index.html          page
 styles.css          styles (light and dark themes)
+src/i18n.js         Spanish and English texts
 src/core.js         engine: tiling, validation, moves, parity, history (no DOM)
 src/presets.js      board shapes (the solid cube; other shapes are for tests)
 src/renderer.js     SVG view, selection tool and animations
@@ -92,6 +102,7 @@ scripts/explore.js  search for the tilings with the most rotatable groups
 
 - **Puzzle invented by:** James (Jim) Propp
 - **Puzzle designed by:** Oskar van Deventer
+- **Physical puzzle:** [available on Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
 
 This project is an unofficial, fan-made digital version created for learning
 and enjoyment. It is not affiliated with or endorsed by the inventor or the

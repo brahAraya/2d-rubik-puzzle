@@ -225,29 +225,29 @@
    */
   function validateTriple(tiling, slotIds, key) {
     if (!Array.isArray(slotIds) || slotIds.length !== 3) {
-      return { ok: false, reason: 'Se necesitan exactamente tres rombos' };
+      return { ok: false, code: 'count', reason: 'Se necesitan exactamente tres rombos' };
     }
-    if (new Set(slotIds).size !== 3) return { ok: false, reason: 'Los rombos deben ser distintos' };
+    if (new Set(slotIds).size !== 3) return { ok: false, code: 'distinct', reason: 'Los rombos deben ser distintos' };
     const s = slotIds.map((id) => tiling.slots[id]);
-    if (s.some((x) => !x)) return { ok: false, reason: 'Rombo inexistente' };
+    if (s.some((x) => !x)) return { ok: false, code: 'missing', reason: 'Rombo inexistente' };
     const orients = new Set(s.map((x) => x.orient));
     if (orients.size !== 3) {
-      return { ok: false, reason: 'Un cubito necesita una cara de cada orientación' };
+      return { ok: false, code: 'orient', reason: 'Un cubito necesita una cara de cada orientación' };
     }
     for (let a = 0; a < 3; a++) {
       for (let b = a + 1; b < 3; b++) {
-        if (!shareEdge(s[a], s[b])) return { ok: false, reason: 'Los rombos no son adyacentes' };
+        if (!shareEdge(s[a], s[b])) return { ok: false, code: 'adjacent', reason: 'Los rombos no son adyacentes' };
       }
     }
     for (const x of s) {
       const idx = x.keys.indexOf(key);
       if (idx < 0 || idx % 2 !== 0) {
-        return { ok: false, reason: 'Los rombos no convergen con su ángulo obtuso en el vértice' };
+        return { ok: false, code: 'angle', reason: 'Los rombos no convergen con su ángulo obtuso en el vértice' };
       }
     }
     const v = tiling.vertices.find((vv) => vv.key === key);
     if (!v || v.slots.length !== 3) {
-      return { ok: false, reason: 'Hay más de tres rombos en el punto de convergencia' };
+      return { ok: false, code: 'crowded', reason: 'Hay más de tres rombos en el punto de convergencia' };
     }
     return { ok: true };
   }
@@ -444,26 +444,27 @@
     }
 
     /**
-     * Valida un movimiento antes de ejecutarlo o animarlo.
+     * Valida un movimiento antes de ejecutarlo o animarlo. Si no es válido
+     * devuelve un `code` estable (para traducir el mensaje) y un `reason` legible.
      * @param {number} hexId
      * @param {'cw60'|'cw'|'flip'|'ccw'|'ccw60'} op
      */
     validateMove(hexId, op, internal = false) {
-      if (!OPS.includes(op)) return { ok: false, reason: 'Sólo se permiten giros múltiplos de 60°' };
+      if (!OPS.includes(op)) return { ok: false, code: 'bad-op', reason: 'Sólo se permiten giros múltiplos de 60°' };
       // Deshacer aplica el giro inverso aunque el jugador no pueda usarlo
       // directamente (p. ej. −60° cuando sólo se permite +60°).
       if (!internal && !this.allowedOps.includes(op)) {
         const list = [...new Set(this.allowedOps.map((o) => Math.min(OP_DEGREES[o], 360 - OP_DEGREES[o])))];
-        return { ok: false, reason: 'Sólo se permite girar ' + list.join('° o ') + '°' };
+        return { ok: false, code: 'not-allowed', reason: 'Sólo se permite girar ' + list.join('° o ') + '°' };
       }
       const h = this.hexagons[hexId];
-      if (!h) return { ok: false, reason: 'No hay un cubito válido en ese punto' };
+      if (!h) return { ok: false, code: 'no-hex', reason: 'No hay un cubito válido en ese punto' };
       const check = validateTriple(this.tiling, h.ring, h.key);
       if (!check.ok) return check;
       if (SHAPE_OPS.includes(op)) {
         const next = this.tiling.heights[h.flip.i] && this.tiling.heights[h.flip.i][h.flip.j];
         if (next === undefined || next + h.flip.delta < 0 || next + h.flip.delta > this.tiling.n) {
-          return { ok: false, reason: 'El volteo sacaría un cubito de la caja' };
+          return { ok: false, code: 'out-of-box', reason: 'El volteo sacaría un cubito de la caja' };
         }
       }
       return { ok: true };

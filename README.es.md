@@ -2,6 +2,12 @@
 
 *[English](README.md)*
 
+🛒 **Compra el puzzle físico:** [Propp Lozenge en Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+
+> **⚠️ Vibe coded.** Este juego se programó con ayuda de un asistente de IA.
+> Funciona y tiene tests, pero no lo escribió una persona línea a línea, así
+> que puede tener asperezas.
+
 Motor de juego en HTML/CSS/JavaScript vanilla que reproduce el puzzle
 **Propp Lozenge** (inventado por James Propp y diseñado por Oskar van Deventer):
 27 fichas en forma de rombo dentro de un marco hexagonal que crean la ilusión de
@@ -127,11 +133,18 @@ seguidas se reproduce en orden. La partida (con su historial) se guarda en
 | Girar 60° (horario) | clic | volver a tocar | `E` / `Enter` |
 | Deshacer / rehacer | iconos ⟲ ⟳ | iconos ⟲ ⟳ | `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` en Mac) |
 
+En la cabecera se elige el idioma (español o inglés) y el modo claro u oscuro.
+Las dos opciones se recuerdan; en la primera visita se usan el idioma del
+navegador y el tema del sistema. Los textos están en `src/i18n.js` y el motor
+devuelve un `code` estable en cada movimiento bloqueado para poder traducir el
+motivo.
+
 ## Estructura
 
 ```
 index.html          interfaz
 styles.css          estilos (tema claro/oscuro)
+src/i18n.js         textos en español e inglés
 src/core.js         motor: teselación, validación, giros, paridad, historial (sin DOM)
 src/presets.js      formas del tablero (cubo macizo; las demás, para tests)
 src/renderer.js     vista SVG, herramienta de selección y animaciones
@@ -139,3 +152,13 @@ src/main.js         controlador: eventos, HUD, persistencia
 tests/core.test.js  tests del motor
 scripts/explore.js  búsqueda de la disposición con más piezas móviles
 ```
+
+## Créditos
+
+- **Puzzle inventado por:** James (Jim) Propp
+- **Puzzle diseñado por:** Oskar van Deventer
+- **Puzzle físico:** [a la venta en Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+
+Este proyecto es una versión digital no oficial, hecha por aficionados para
+aprender y disfrutar. No tiene relación con el inventor ni con el diseñador del
+puzzle físico, ni cuenta con su respaldo.
