@@ -88,11 +88,12 @@ body {
   margin: 0;
   background: transparent;
   color: var(--ink);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* JetBrains Mono (Google Fonts); si no carga, la monoespaciada del sistema. */
+  font: 14px/1.45 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; white-space: nowrap; }
+h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; white-space: nowrap; }
 
 .prefs { display: flex; gap: 6px; align-items: center; }
 /* Selector de idioma: control segmentado ES | EN con icono de globo. */
@@ -142,6 +143,8 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; white-space: nowrap; 
 .history { display: flex; gap: 8px; }
 .history button.icon { height: 40px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* La monoespaciada es ancha: estos botones van en una sola línea y algo más pequeños. */
+.row2 button { font-size: 0.93em; white-space: nowrap; padding-left: 6px; padding-right: 6px; }
 button.with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 button.with-icon svg {
   width: 17px;
@@ -197,7 +200,7 @@ button.with-icon svg {
  */
 @media (min-width: 761px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 330px;
+    grid-template-columns: minmax(0, 1fr) 350px;
     height: 100vh;
     height: 100dvh;
     max-width: 1400px;
@@ -229,7 +232,7 @@ button.with-icon svg {
 .slot.moving { pointer-events: none; }
 
 .label {
-  font: 600 15px system-ui, sans-serif;
+  font: 600 15px "JetBrains Mono", ui-monospace, monospace;
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
