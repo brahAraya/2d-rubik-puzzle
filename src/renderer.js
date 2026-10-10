@@ -42,6 +42,74 @@
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
 
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  /*
+   * Forma de la herramienta de selección como «perfil radial»: la distancia
+   * del centro al borde en TOOL_RAYS direcciones fijas. Así cualquier forma
+   * (hexágono de 3 rombos, estrella de 4 o 6 rombos, vértice del borde) tiene
+   * la misma representación y se puede interpolar punto a punto. Las
+   * direcciones incluyen todos los múltiplos de 30°, que es donde están las
+   * esquinas de cualquier rombo de la rejilla, así que el contorno es exacto.
+   */
+  const TOOL_RAYS = 48; // cada 7,5°
+  const ARM_SLOTS = 12; // los brazos apuntan siempre a múltiplos de 30°
+  const TOOL_TWEEN_MS = 160;
+
+  // Distancia a la que un rayo desde la esquina `c` de un rombo sale de él (0 si no lo cruza).
+  function rayExit(c, dir, corners) {
+    let best = 0;
+    for (let k = 0; k < 4; k++) {
+      const a = corners[k];
+      const b = corners[(k + 1) % 4];
+      const ex = b[0] - a[0];
+      const ey = b[1] - a[1];
+      const den = dir[0] * ey - dir[1] * ex;
+      if (Math.abs(den) < 1e-12) continue;
+      const ax = a[0] - c[0];
+      const ay = a[1] - c[1];
+      const t = (ax * ey - ay * ex) / den;
+      const u = (ax * dir[1] - ay * dir[0]) / den;
+      if (u >= -1e-9 && u <= 1 + 1e-9 && t > best) best = t;
+    }
+    return best;
+  }
+
+  /** Estado visual de la herramienta para un vértice de una teselación. */
+  function toolShape(tiling, vertex) {
+    const c = vertex.point;
+    const slots = vertex.slots.map((id) => tiling.slots[id]);
+    const radii = new Array(TOOL_RAYS);
+    for (let k = 0; k < TOOL_RAYS; k++) {
+      const a = (k * 2 * Math.PI) / TOOL_RAYS;
+      const dir = [Math.cos(a), Math.sin(a)];
+      let r = 0;
+      for (const s of slots) r = Math.max(r, rayExit(c, dir, s.corners));
+      radii[k] = r;
+    }
+    const arms = new Array(ARM_SLOTS).fill(0);
+    for (const s of slots) {
+      const dx = s.centroid[0] - c[0];
+      const dy = s.centroid[1] - c[1];
+      const i = ((Math.round(Math.atan2(dy, dx) / (Math.PI / 6)) % ARM_SLOTS) + ARM_SLOTS) % ARM_SLOTS;
+      arms[i] = Math.hypot(dx, dy);
+    }
+    return { cx: c[0], cy: c[1], radii, arms, bad: vertex.hex >= 0 ? 0 : 1 };
+  }
+
+  function mixShape(a, b, f) {
+    const lerp = (x, y) => x + (y - x) * f;
+    return {
+      cx: lerp(a.cx, b.cx),
+      cy: lerp(a.cy, b.cy),
+      radii: a.radii.map((r, k) => lerp(r, b.radii[k])),
+      arms: a.arms.map((r, k) => lerp(r, b.arms[k])),
+      bad: lerp(a.bad, b.bad),
+    };
+  }
+
   class BoardView {
     constructor(svg, opts = {}) {
       this.svg = svg;
@@ -49,7 +117,9 @@
       this.queue = [];
       this.animating = false;
       this.onIdle = opts.onIdle || (() => {});
-      this.selection = null; // { vertex, hex } en coordenadas de rejilla
+      this.toolTween = opts.toolTween != null ? opts.toolTween : TOOL_TWEEN_MS;
+      this.selKey = null; // vértice seleccionado (clave de rejilla)
+      this.toolState = null; // forma dibujada ahora mismo (puede estar a medio camino)
     }
 
     /* ---------------- Montaje ---------------- */
@@ -98,15 +168,20 @@
       });
       this.labelEls = puzzle.target.slots.map(() => el('text', { class: 'label' }, this.labelLayer));
 
-      // Herramienta de 3 piezas.
-      this.toolHex = el('path', { class: 'tool-hex' }, this.toolLayer);
-      this.toolArms = el('path', { class: 'tool-arms' }, this.toolLayer);
+      // Herramienta de 3 piezas. `toolSpin` recibe la rotación del giro; el
+      // grupo exterior conserva su transformación CSS para la sacudida.
+      this.toolSpin = el('g', {}, this.toolLayer);
+      this.toolHex = el('path', { class: 'tool-hex' }, this.toolSpin);
+      this.toolArms = el('path', { class: 'tool-arms' }, this.toolSpin);
+      this.toolDot = el('circle', { r: 6, class: 'tool-dot' }, this.toolSpin);
+      // La flecha indica el sentido del giro: no gira con la pieza.
       this.toolArrow = el('path', { class: 'tool-arrow', 'marker-end': 'url(#arrowhead)' }, this.toolLayer);
-      this.toolDot = el('circle', { r: 6, class: 'tool-dot' }, this.toolLayer);
 
+      this.selKey = null;
+      this.toolState = null;
       this.display = this._current();
       this.paint();
-      this.drawSelection();
+      this._drawTool(null);
     }
 
     _current() {
@@ -137,6 +212,7 @@
           this.labelEls[s.id].setAttribute('y', (s.centroid[1] * SCALE).toFixed(2));
         });
         this.drawnTiling = tiling;
+        this._snapTool();
       }
       tiling.slots.forEach((s) => {
         const piece = perm[s.id];
@@ -151,55 +227,86 @@
 
     /* ---------------- Selección ---------------- */
 
-    setSelection(sel) {
-      this.selection = sel;
-      this.drawSelection();
+    /**
+     * Selecciona el vértice `key` (o ninguno con null). La herramienta se
+     * desliza desde su posición actual hasta la nueva, transformando su
+     * forma y su color por el camino.
+     */
+    setSelection(key) {
+      if (key === this.selKey) return;
+      this.selKey = key;
+      const target = this._targetShape();
+      if (!target || !this.toolState || this.toolTween <= 0) {
+        cancelAnimationFrame(this._toolRaf);
+        this._drawTool(target);
+        return;
+      }
+      const from = this.toolState;
+      const start = performance.now();
+      cancelAnimationFrame(this._toolRaf);
+      const step = (now) => {
+        const t = Math.min(1, Math.max(0, (now - start) / this.toolTween));
+        this._drawTool(mixShape(from, target, easeOut(t)));
+        if (t < 1) this._toolRaf = requestAnimationFrame(step);
+      };
+      this._toolRaf = requestAnimationFrame(step);
     }
 
-    drawSelection() {
-      const sel = this.selection;
-      const show = !!sel;
-      this.toolLayer.style.display = show ? '' : 'none';
-      if (!show) return;
-      const p = this.puzzle;
-      const tiling = p.tiling;
-      const c = sel.vertex.point;
-      const valid = sel.hex >= 0;
-      this.toolLayer.classList.toggle('blocked', !valid);
-      this.toolLayer.classList.toggle('shake', !!sel.shake);
+    /** Sacudida de «giro bloqueado». */
+    shake() {
+      this.toolLayer.classList.remove('shake');
+      void this.toolLayer.getBBox(); // reinicia la animación CSS
+      this.toolLayer.classList.add('shake');
+      clearTimeout(this._shakeTimer);
+      this._shakeTimer = setTimeout(() => this.toolLayer.classList.remove('shake'), 350);
+    }
 
-      const slots = sel.vertex.slots.map((id) => tiling.slots[id]);
-      // Contorno: los vértices de los rombos que no son el centro, ordenados por ángulo.
-      const pts = new Map();
-      slots.forEach((s) => s.corners.forEach((q, i) => {
-        if (s.keys[i] !== sel.vertex.key) pts.set(s.keys[i], q);
-      }));
-      const ring = [...pts.values()].sort(
-        (a, b) => Math.atan2(a[1] - c[1], a[0] - c[0]) - Math.atan2(b[1] - c[1], b[0] - c[0])
-      );
-      this.toolHex.setAttribute('d', valid ? pathFrom(ring) : slots.map((s) => pathFrom(s.corners)).join(''));
+    // Forma objetivo según la teselación que se ve en pantalla.
+    _targetShape() {
+      const tiling = this.drawnTiling;
+      if (this.selKey === null || !tiling) return null;
+      if (!tiling._vertexByKey) tiling._vertexByKey = new Map(tiling.vertices.map((v) => [v.key, v]));
+      const v = tiling._vertexByKey.get(this.selKey);
+      return v ? toolShape(tiling, v) : null;
+    }
 
-      // Brazos de la herramienta: del centro al centro de cada rombo.
-      this.toolArms.setAttribute('d', slots.map((s) =>
-        'M' + c[0] * SCALE + ' ' + c[1] * SCALE + 'L' + s.centroid[0] * SCALE + ' ' + s.centroid[1] * SCALE
-      ).join(''));
-      this.toolDot.setAttribute('cx', c[0] * SCALE);
-      this.toolDot.setAttribute('cy', c[1] * SCALE);
+    // Recoloca la herramienta sin transición (la teselación mostrada cambió).
+    _snapTool() {
+      if (!this.toolSpin) return;
+      cancelAnimationFrame(this._toolRaf);
+      this._drawTool(this._targetShape());
+    }
 
-      if (valid) {
-        // Flecha circular que indica el giro del clic (60° o 120° horario).
-        const rad = 0.42 * SCALE;
-        const sweep = this.puzzle.allowFlip ? Math.PI / 3 : (2 * Math.PI) / 3;
-        const a0 = -Math.PI / 2 - 0.25 - sweep / 2;
-        const a1 = a0 + sweep + 0.5;
-        const x0 = c[0] * SCALE + rad * Math.cos(a0);
-        const y0 = c[1] * SCALE + rad * Math.sin(a0);
-        const x1 = c[0] * SCALE + rad * Math.cos(a1);
-        const y1 = c[1] * SCALE + rad * Math.sin(a1);
-        this.toolArrow.setAttribute('d', `M${x0} ${y0}A${rad} ${rad} 0 0 1 ${x1} ${y1}`);
-      } else {
-        this.toolArrow.setAttribute('d', '');
-      }
+    _drawTool(st) {
+      this.toolState = st;
+      this.toolLayer.style.display = st ? '' : 'none';
+      if (!st) return;
+      const cx = st.cx * SCALE;
+      const cy = st.cy * SCALE;
+      const pts = st.radii.map((r, k) => {
+        const a = (k * 2 * Math.PI) / TOOL_RAYS;
+        return (cx + r * SCALE * Math.cos(a)).toFixed(2) + ' ' + (cy + r * SCALE * Math.sin(a)).toFixed(2);
+      });
+      this.toolHex.setAttribute('d', 'M' + pts.join('L') + 'Z');
+      let arms = '';
+      st.arms.forEach((r, k) => {
+        if (r < 0.02) return;
+        const a = (k * Math.PI) / 6;
+        arms += `M${cx} ${cy}L${(cx + r * SCALE * Math.cos(a)).toFixed(2)} ${(cy + r * SCALE * Math.sin(a)).toFixed(2)}`;
+      });
+      this.toolArms.setAttribute('d', arms);
+      this.toolDot.setAttribute('cx', cx);
+      this.toolDot.setAttribute('cy', cy);
+      // Flecha del giro de 60°: se desvanece a medida que la forma pasa a «bloqueada».
+      const rad = 0.42 * SCALE;
+      const sweep = Math.PI / 3;
+      const a0 = -Math.PI / 2 - 0.25 - sweep / 2;
+      const a1 = a0 + sweep + 0.5;
+      this.toolArrow.setAttribute('d', `M${cx + rad * Math.cos(a0)} ${cy + rad * Math.sin(a0)}A${rad} ${rad} 0 0 1 ${cx + rad * Math.cos(a1)} ${cy + rad * Math.sin(a1)}`);
+      this.toolArrow.style.opacity = String(Math.max(0, 1 - 2 * st.bad));
+      // Color: mezcla continua entre verde (válido) y rojo (bloqueado).
+      this.toolLayer.style.setProperty('--mix', (st.bad * 100).toFixed(1) + '%');
+      this.toolLayer.classList.toggle('blocked', st.bad > 0.5);
     }
 
     /* ---------------- Animación ---------------- */
@@ -273,6 +380,9 @@
         const steps = Math.abs(a) / (Math.PI / 3);
         const i = Math.min(Math.floor(steps), steps60 - 1);
         const f = steps - i;
+        // Si la herramienta está sobre el cubito que gira, gira con él.
+        if (this.selKey === job.key) this.toolSpin.setAttribute('transform', tf);
+        else this.toolSpin.removeAttribute('transform');
         moving.forEach((m) => {
           m.path.setAttribute('transform', tf);
           const light = LIGHT[m.orients[i]] * (1 - f) + LIGHT[m.orients[i + 1]] * f;
@@ -285,6 +395,7 @@
           this._raf = requestAnimationFrame(frame);
         } else {
           this.animLayer.textContent = '';
+          this.toolSpin.removeAttribute('transform');
           this.display = job.after;
           this.paint();
           this._next();

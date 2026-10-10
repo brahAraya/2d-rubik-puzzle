@@ -91,10 +91,8 @@
 
   const view = new ProppView.BoardView(ui.board, {
     duration: reduceMotion ? 0 : 280,
-    onIdle: () => {
-      refreshSelection();
-      checkWin();
-    },
+    toolTween: reduceMotion ? 0 : 160,
+    onIdle: () => checkWin(),
   });
 
   let puzzle = null;
@@ -156,7 +154,6 @@
       timer.start = performance.now() - timer.elapsed;
     }
     view.enqueue(res.transition);
-    refreshSelection();
     return true;
   }
 
@@ -164,23 +161,18 @@
     const tr = puzzle.undo();
     if (!tr) return say(t('status.noUndo'));
     view.enqueue(tr);
-    refreshSelection();
   }
 
   function redo() {
     const tr = puzzle.redo();
     if (!tr) return say(t('status.noRedo'));
     view.enqueue(tr);
-    refreshSelection();
   }
 
   function blocked(res) {
     const key = 'reason.' + res.code;
     say(t('status.blocked', { reason: ProppI18n.STRINGS.es[key] ? t(key) : res.reason }), true);
-    if (view.selection) {
-      view.setSelection(Object.assign({}, view.selection, { shake: true }));
-      setTimeout(() => view.selection && view.setSelection(Object.assign({}, view.selection, { shake: false })), 350);
-    }
+    view.shake();
   }
 
   function checkWin() {
@@ -201,7 +193,7 @@
 
   function selectVertex(v) {
     selectedKey = v ? v.key : null;
-    view.setSelection(v ? { vertex: v, hex: v.hex } : null);
+    view.setSelection(selectedKey);
   }
 
   function selectAt(x, y) {
@@ -209,12 +201,6 @@
     // Fuera del tablero no se muestra la herramienta.
     if (!v || Math.hypot(v.point[0] - x, v.point[1] - y) > 0.9) return selectVertex(null);
     selectVertex(v);
-  }
-
-  // Tras un volteo cambian los vértices: recolocamos la herramienta en el mismo punto.
-  function refreshSelection() {
-    if (selectedKey === null) return;
-    selectVertex(puzzle.tiling.vertices.find((v) => v.key === selectedKey) || null);
   }
 
   function selectHex(hexId) {

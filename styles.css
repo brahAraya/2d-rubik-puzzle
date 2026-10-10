@@ -169,15 +169,24 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
 }
 #board:not(.numbered) .labels { display: none; }
 
-.tool { pointer-events: none; }
-.tool-hex { fill: rgba(16, 185, 129, 0.12); stroke: var(--ok); stroke-width: 4; stroke-linejoin: round; }
-.tool-arms { stroke: var(--ok); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
-.tool-dot { fill: var(--ok); stroke: #fff; stroke-width: 2; }
+/* Herramienta de selección. --mix (0% verde → 100% rojo) lo fija el renderer
+   para que el color cambie de forma continua al pasar de un punto a otro. */
+.tool {
+  pointer-events: none;
+  --mix: 0%;
+  --tool: color-mix(in srgb, var(--bad) var(--mix), var(--ok));
+}
+.tool-hex {
+  fill: color-mix(in srgb, var(--tool) 13%, transparent);
+  stroke: var(--tool);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.tool-arms { stroke: var(--tool); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
+.tool-dot { fill: var(--tool); stroke: #fff; stroke-width: 2; }
 .tool-arrow { fill: none; stroke: #fff; stroke-width: 3.5; stroke-linecap: round; }
 .tool-arrowhead { fill: #fff; }
-.tool.blocked .tool-hex { fill: rgba(225, 29, 72, 0.12); stroke: var(--bad); stroke-dasharray: 6 5; stroke-width: 3; }
-.tool.blocked .tool-arms { stroke: var(--bad); }
-.tool.blocked .tool-dot { fill: var(--bad); }
+.tool.blocked .tool-hex { stroke-dasharray: 6 5; stroke-width: 3; }
 .tool.shake { animation: shake 0.3s; }
 
 @keyframes shake {
