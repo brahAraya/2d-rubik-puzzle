@@ -93,7 +93,7 @@ body {
 }
 
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; white-space: nowrap; }
+h1 { margin: 0; font-size: 1.4em; letter-spacing: -0.02em; white-space: nowrap; }
 
 .prefs { display: flex; gap: 6px; align-items: center; }
 /* Selector de idioma: control segmentado ES | EN con icono de globo. */
@@ -238,19 +238,21 @@ button.with-icon svg {
 }
 
 /*
- * Barra de opciones: pegada a los bordes de la ventana (sin tarjeta flotante).
- * En móvil va debajo del tablero a todo el ancho; en escritorio, a la derecha.
+ * Móvil: la barra se reparte alrededor del tablero. La cabecera (título,
+ * tema, idioma, tamaño y objetivo) va arriba del todo; el resto de opciones,
+ * debajo del tablero. Ninguna de las dos lleva fondo (prueba: se puede volver
+ * a poner el fondo de la barra aquí).
  */
-.side {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px 16px 20px;
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border-top: 1px solid var(--line);
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
-}
-.side > * { flex-shrink: 0; }
+.side { display: contents; }
+.panel-head { order: 0; padding: 16px 16px 0; }
+.board-wrap { order: 1; }
+.panel-main { order: 2; padding: 0 16px; }
+.panel-main > .sep:first-child { display: none; }
+.side > .note { order: 3; padding: 0 16px; margin-top: 8px; }
+.side > .note:last-child { margin-bottom: 20px; }
+.side > .panel { padding-top: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
+.side > .panel-head { padding: 16px 16px 0; }
+.side > .panel-main { padding: 0 16px; }
 
 /* Todos los botones y selectores del panel comparten exactamente el mismo alto. */
 .panel { --ctl-h: 40px; }
@@ -290,14 +292,26 @@ button.with-icon svg {
   .board-wrap { min-height: 0; padding: 16px 24px; }
   #board { flex: 1 1 auto; min-height: 0; height: 100%; aspect-ratio: auto; }
   .side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     min-height: 0;
     height: 100%;
     overflow-y: auto;
     padding: 16px 20px 14px;
-    border-top: 0;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
     border-left: 1px solid var(--line);
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.07);
   }
+  .side > * { flex-shrink: 0; }
+  /* En escritorio el orden vuelve a ser tablero | barra. */
+  .board-wrap { order: 0; }
+  .side { order: 1; }
+  .side > .panel-head,
+  .side > .panel-main,
+  .side > .note,
+  .side > .note:last-child { padding: 0; margin: 0; }
+  .panel-main > .sep:first-child { display: block; }
   /* Las notas (aviso de IA y créditos) quedan al fondo de la barra. */
   .panel + .note { margin-top: auto; padding-top: 4px; }
 }
@@ -496,7 +510,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 .help-body > :last-child { margin-bottom: 8px; }
 /* Objetivo: texto del panel (sin tarjeta) bajo el tamaño, con los tres colores. */
 .help-goal {
-  margin-top: 6px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
