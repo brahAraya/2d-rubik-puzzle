@@ -124,7 +124,7 @@ h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; white-space: nowrap;
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: inherit;
   font-weight: 600;
   letter-spacing: 0.03em;
 }
@@ -144,7 +144,7 @@ h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; white-space: nowrap;
 .history button.icon { width: var(--ctl-h); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 /* La monoespaciada es ancha: estos botones van en una sola línea y algo más pequeños. */
-.row2 button { font-size: 0.93em; padding-left: 10px; padding-right: 10px; }
+.row2 button { padding-left: 10px; padding-right: 10px; }
 /* Botón con icono: icono y texto forman un bloque centrado, separados 8 px
    (el patrón estándar de Material, Apple HIG y Fluent). */
 button.with-icon {
@@ -194,7 +194,7 @@ button.with-icon svg {
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.85em;
+  font-size: inherit;
   font-weight: 600;
 }
 .segmented button:hover:not(:disabled):not([aria-checked="true"]) { background: transparent; box-shadow: none; color: var(--ink); }
@@ -251,6 +251,8 @@ button.with-icon svg {
   box-sizing: border-box;
 }
 .panel button:not(.segmented button):not(.lang-switch button) { padding-top: 0; padding-bottom: 0; }
+/* Todos los botones y selectores del panel con el mismo tamaño de letra. */
+.panel button { font-size: 14px; }
 .segmented button { height: 100%; }
 
 /*
