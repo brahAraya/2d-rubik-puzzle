@@ -118,6 +118,7 @@
       this.animating = false;
       this.onIdle = opts.onIdle || (() => {});
       this.toolTween = opts.toolTween != null ? opts.toolTween : TOOL_TWEEN_MS;
+      this.pieceDim = 1;
       this.selKey = null; // vértice seleccionado (clave de rejilla)
       this.toolState = null; // forma dibujada ahora mismo (puede estar a medio camino)
     }
@@ -180,7 +181,7 @@
       this.selKey = null;
       this.toolState = null;
       this.display = this._current();
-      this.paint();
+      this.refreshTheme();
       this._drawTool(null);
     }
 
@@ -191,7 +192,18 @@
     /* ---------------- Pintado ---------------- */
 
     fillFor(piece, light) {
-      return shade(PIECE_RGB[this.puzzle.pieceColor(piece)], light);
+      return shade(PIECE_RGB[this.puzzle.pieceColor(piece)], light * this.pieceDim);
+    }
+
+    /**
+     * Lee del CSS cuánto se oscurecen las fichas (--piece-dim: 1 en modo claro,
+     * menos en oscuro para que contrasten con los bordes blancos) y repinta.
+     */
+    refreshTheme() {
+      const v = parseFloat(getComputedStyle(this.svg).getPropertyValue('--piece-dim'));
+      this.pieceDim = v > 0 && v <= 1 ? v : 1;
+      // Durante una animación el siguiente fotograma ya usa el valor nuevo.
+      if (this.puzzle && !this.animating) this.paint();
     }
 
     /** Pinta una instantánea { tiling, perm } (por defecto, la mostrada). */

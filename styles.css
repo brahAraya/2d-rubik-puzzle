@@ -9,6 +9,7 @@
   --bad: #e11d48;
   --edge: #1b1d22;
   --outline: #1b1d22; /* borde exterior del cubo; --edge: líneas entre fichas */
+  --piece-dim: 1; /* factor de luz de las fichas (lo lee el renderer) */
   --hole: #2a2d33;
   --on-accent: #ffffff;
   /* Gradientes sutiles de la página (el cubo no los usa). */
@@ -31,6 +32,7 @@
     --on-accent: #0d1117;
     --outline: #ffffff;
     --edge: #ffffff;
+    --piece-dim: 0.8;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
     --glow-1: rgba(88, 166, 255, 0.10);
@@ -49,6 +51,7 @@
   --on-accent: #0d1117;
   --outline: #ffffff;
   --edge: #ffffff;
+  --piece-dim: 0.8;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
   --glow-1: rgba(88, 166, 255, 0.10);

@@ -86,8 +86,14 @@
     document.documentElement.dataset.theme = next;
     storageSet(THEME_KEY, next);
     updateThemeButton();
+    view.refreshTheme();
   });
-  if (darkQuery && darkQuery.addEventListener) darkQuery.addEventListener('change', updateThemeButton);
+  if (darkQuery && darkQuery.addEventListener) {
+    darkQuery.addEventListener('change', () => {
+      updateThemeButton();
+      view.refreshTheme();
+    });
+  }
 
   const view = new ProppView.BoardView(ui.board, {
     duration: reduceMotion ? 0 : 280,
