@@ -189,7 +189,10 @@
 
       // La identidad de cada casilla es estable; su geometría cambia con los volteos.
       this.slotEls = puzzle.target.slots.map((s) => el('path', { class: 'slot orient-' + s.orient }, this.slotLayer));
-      this.glowEls = puzzle.target.slots.map(() => el('path', {}, this.glowLayer));
+      // Las manchas del resplandor se indexan por POSICIÓN en el tablero, no por
+      // casilla: así, tras un giro, cada mancha cambia de color en su sitio
+      // (sin «viajar» con la ficha que gira, que se vería como un giro).
+      this.glowByPos = new Map();
 
       // Numeración de las piezas que pueden moverse (modo numerado).
       this.pieceNumber = new Array(puzzle.slotCount).fill(0);
@@ -364,7 +367,6 @@
         tiling.slots.forEach((s) => {
           const path = this.slotEls[s.id];
           path.setAttribute('d', pathFrom(s.corners));
-          this.glowEls[s.id].setAttribute('d', pathFrom(s.corners));
           // Con volteo toda casilla acaba siendo móvil: no marcamos ninguna como fija.
           path.classList.toggle('fixed', !p.allowFlip && !movable.has(s.id));
           this.labelEls[s.id].setAttribute('x', (s.centroid[0] * SCALE).toFixed(2));
@@ -373,17 +375,38 @@
         this.drawnTiling = tiling;
         this._snapTool();
       }
+      const glowSeen = new Set();
       tiling.slots.forEach((s) => {
         const piece = perm[s.id];
         const path = this.slotEls[s.id];
         const fill = this.fillFor(piece, LIGHT[this._vis(s.orient)]);
         path.setAttribute('fill', fill);
         path.classList.remove('hole');
-        this.glowEls[s.id].style.fill = fill;
+        glowSeen.add(this._glowAt(s).dataset.pos);
+        this._glowAt(s).style.fill = fill;
         const label = this.labelEls[s.id];
         label.textContent = numbered && p.everMovable[piece] ? this.pieceNumber[piece] : '';
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
       });
+      // Posiciones que ya no existen en la forma actual.
+      this.glowByPos.forEach((path, pos) => {
+        if (!glowSeen.has(pos)) {
+          path.remove();
+          this.glowByPos.delete(pos);
+        }
+      });
+    }
+
+    // Mancha del resplandor para la posición que ocupa la casilla `s`.
+    _glowAt(s) {
+      const pos = s.keys.slice().sort().join('|');
+      let path = this.glowByPos.get(pos);
+      if (!path) {
+        path = el('path', { d: pathFrom(s.corners) }, this.glowLayer);
+        path.dataset.pos = pos;
+        this.glowByPos.set(pos, path);
+      }
+      return path;
     }
 
     /* ---------------- Selección ---------------- */
