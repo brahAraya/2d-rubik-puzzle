@@ -5,6 +5,8 @@
   --muted: #6b6f78;
   --line: #d9d6cf;
   --accent: #1f6feb;
+  --accent-text: var(--accent);
+  --active-bg: color-mix(in srgb, var(--accent) 24%, var(--panel));
   --ok: #10b981;
   --bad: #e11d48;
   /* Selector: azul si se puede girar, gris neutro si no. Ninguno de los dos
@@ -37,10 +39,14 @@
     --ink: #eceef2;
     --muted: #9aa0aa;
     --line: #33373e;
-    --accent: #58a6ff;
+    /* Acento de los controles en modo oscuro: azul marino. */
+    --accent: #102542;
+    --accent-2: #1f4c80;
+    --accent-text: #8fb4e3; /* acento legible para textos y enlaces */
+    --active-bg: #102542;
     --hole: #0c0d0f;
-    --on-accent: #0d1117;
-    --sel-ok: #6494aa;
+    --on-accent: #ffffff;
+    --sel-ok: #55dbcb;
     --sel-bad: #a9aeb7;
     --outline: #151515;
     --edge: #151515;
@@ -50,7 +56,6 @@
     --piece-1: #008148;
     --piece-2: #cc444b;
     --panel-2: #191c21;
-    --accent-2: #9d8cff;
     --glow-1: rgba(249, 220, 92, 0.13);
     --glow-2: rgba(0, 129, 72, 0.22);
     --glow-3: rgba(204, 68, 75, 0.2);
@@ -63,10 +68,13 @@
   --ink: #eceef2;
   --muted: #9aa0aa;
   --line: #33373e;
-  --accent: #58a6ff;
+  --accent: #102542;
+  --accent-2: #1f4c80;
+  --accent-text: #8fb4e3;
+  --active-bg: #102542;
   --hole: #0c0d0f;
-  --on-accent: #0d1117;
-  --sel-ok: #6494aa;
+  --on-accent: #ffffff;
+  --sel-ok: #55dbcb;
   --sel-bad: #a9aeb7;
   --outline: #151515;
   --edge: #151515;
@@ -75,7 +83,6 @@
   --piece-1: #008148;
   --piece-2: #cc444b;
   --panel-2: #191c21;
-  --accent-2: #9d8cff;
   --glow-1: rgba(249, 220, 92, 0.13);
   --glow-2: rgba(0, 129, 72, 0.22);
   --glow-3: rgba(204, 68, 75, 0.2);
@@ -150,7 +157,7 @@ h1 { margin: 0; font-size: 1.4em; letter-spacing: -0.02em; white-space: nowrap; 
 .lang-switch button:hover:not(:disabled):not([aria-pressed="true"]) { background: transparent; box-shadow: none; color: var(--ink); }
 .lang-switch button[aria-pressed="true"],
 .lang-switch button[aria-pressed="true"]:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 24%, var(--panel));
+  background: var(--active-bg);
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
@@ -219,7 +226,7 @@ button.with-icon svg {
 .segmented button:hover:not(:disabled):not([aria-checked="true"]) { background: transparent; box-shadow: none; color: var(--ink); }
 .segmented button[aria-checked="true"],
 .segmented button[aria-checked="true"]:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 24%, var(--panel));
+  background: var(--active-bg);
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
@@ -496,7 +503,7 @@ button[data-tip]::after {
 .panel button.icon:last-child[data-tip]::after { left: auto; right: 0; transform: none; }
 button[data-tip]:hover::after,
 button[data-tip]:focus-visible::after { opacity: 1; }
-button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); }
 
@@ -515,7 +522,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   color: var(--ink);
   transition: color 0.18s ease;
 }
-.help-section summary:hover { color: var(--accent); }
+.help-section summary:hover { color: var(--accent-text); }
 .help-section summary::-webkit-details-marker { display: none; }
 .help-section summary::before {
   content: "";
@@ -561,7 +568,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   height: 22px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -594,7 +601,7 @@ kbd {
 
 /* Notas bajo el panel: aviso de IA y créditos. */
 .note { display: block; margin: 0; padding: 0; font-size: 0.75rem; line-height: 1.4; color: var(--muted); }
-.note a { color: var(--accent); white-space: nowrap; }
+.note a { color: var(--accent-text); white-space: nowrap; }
 .note a::after { content: " ↗"; }
 
 /* Cambio de tema: fundido de toda la página (View Transitions API). */
