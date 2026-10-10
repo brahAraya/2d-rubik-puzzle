@@ -240,6 +240,9 @@ button.with-icon svg {
 
 /* Todos los botones y selectores del panel comparten exactamente el mismo alto. */
 .panel { --ctl-h: 40px; }
+/* Si el contenido no cabe (instrucciones abiertas), el panel hace scroll: sus
+   elementos nunca se encogen. */
+.panel > * { flex-shrink: 0; }
 .panel button:not(.segmented button):not(.lang-switch button),
 .panel .segmented,
 .panel .lang-switch {
