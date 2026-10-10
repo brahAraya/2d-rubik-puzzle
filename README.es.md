@@ -1,12 +1,13 @@
 # Propp Lozenge
 
+> **🤖 Vibe coded.** Este proyecto se hizo con IA generativa: el código lo
+> escribió un asistente de IA. Lo avisamos desde el principio para que quien
+> prefiera no usar ni apoyar obras hechas con IA pueda decidir enseguida si
+> sigue o no.
+
 *[English](README.md)*
 
 🛒 **Compra el puzzle físico:** [Propp Lozenge en Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
-
-> **⚠️ Vibe coded.** Este juego se programó con ayuda de un asistente de IA.
-> Funciona y tiene tests, pero no lo escribió una persona línea a línea, así
-> que puede tener asperezas.
 
 Motor de juego en HTML/CSS/JavaScript vanilla que reproduce el puzzle
 **Propp Lozenge** (inventado por James Propp y diseñado por Oskar van Deventer):

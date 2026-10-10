@@ -249,4 +249,13 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   color: var(--muted);
 }
 .foot p { margin: 4px 0; }
-.foot .vibe { font-style: italic; }
+/* Aviso de IA: lo primero que se ve, sin alarmismo. */
+.vibe-banner {
+  margin: 0;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}

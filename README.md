@@ -1,15 +1,15 @@
 # Propp Lozenge
 
+> **🤖 Vibe coded.** This project was made with generative AI: an AI assistant
+> wrote the code. We say so up front so that anyone who prefers not to use or
+> support AI-made work can decide right away whether to continue.
+
 *[Español](README.es.md)*
 
 A browser version of **Propp Lozenge**, a flat puzzle that looks like a 3D cube.
 It is written in vanilla HTML, CSS and JavaScript, with no dependencies.
 
 🛒 **Get the physical puzzle:** [Propp Lozenge on Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
-
-> **⚠️ Vibe coded.** This game was programmed with the help of an AI
-> assistant. It works and is tested, but it was not written line by line by a
-> human, so expect rough edges.
 
 ## The puzzle
 
