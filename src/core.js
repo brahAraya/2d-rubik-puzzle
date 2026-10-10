@@ -283,9 +283,22 @@
   // superior → izquierda → derecha → superior (verificado en los tests).
   const NEXT60 = [ORIENT.LEFT, ORIENT.RIGHT, ORIENT.TOP];
 
-  const OPS = ['cw', 'ccw', 'flip'];
-  const INVERSE = { cw: 'ccw', ccw: 'cw', flip: 'flip' };
-  const OP_ANGLE = { cw: (2 * Math.PI) / 3, ccw: (4 * Math.PI) / 3, flip: Math.PI };
+  // Movimientos de la herramienta magnética (ángulos en sentido horario):
+  //   cw60 = 60°, cw = 120°, flip = 180°, ccw = 240° (−120°), ccw60 = 300° (−60°).
+  // 120° y 240° conservan la forma del tablero; 60°, 180° y 300° la cambian
+  // (un cubito que sobresale pasa a ser un rincón y viceversa).
+  const OPS = ['cw60', 'cw', 'flip', 'ccw', 'ccw60'];
+  const SHAPE_OPS = ['cw60', 'flip', 'ccw60'];
+  const INVERSE = { cw: 'ccw', ccw: 'cw', flip: 'flip', cw60: 'ccw60', ccw60: 'cw60' };
+  // Ángulo con signo que recorre la animación (negativo = antihorario).
+  const OP_ANGLE = {
+    cw60: Math.PI / 3,
+    cw: (2 * Math.PI) / 3,
+    flip: Math.PI,
+    ccw: (-2 * Math.PI) / 3,
+    ccw60: -Math.PI / 3,
+  };
+  const OP_DEGREES = { cw60: 60, cw: 120, flip: 180, ccw: 240, ccw60: 300 };
 
   function sameHeights(a, b) {
     return a.length === b.length && a.every((row, i) => row.every((h, j) => h === b[i][j]));
@@ -312,13 +325,23 @@
      * @param {number[][]} opts.heights  partición plana del estado resuelto
      * @param {'color'|'numerado'} [opts.mode]  'color': basta con que cada
      *        orientación tenga su color; 'numerado': cada pieza vuelve a su casilla.
-     * @param {boolean} [opts.allowFlip]  permite el volteo de 180° (quitar o
+     * @param {string[]} [opts.allowedOps]  movimientos permitidos. Por defecto
+     *        sólo el giro mínimo de 60° (horario y antihorario), como la
+     *        herramienta magnética del puzzle físico.
+     * @param {boolean} [opts.allowFlip]  atajo: true = todos los giros,
+     *        false = sólo 120°/240° (la forma no cambia). Permite el volteo de 180° (quitar o
      *        poner un cubito), que cambia la forma del tablero.
      */
     constructor(opts) {
       this.target = buildTiling(opts.heights);
       this.mode = opts.mode === 'numerado' ? 'numerado' : 'color';
-      this.allowFlip = !!opts.allowFlip;
+      if (Array.isArray(opts.allowedOps)) this.allowedOps = OPS.filter((op) => opts.allowedOps.includes(op));
+      else if (opts.allowFlip === true) this.allowedOps = OPS.slice();
+      else if (opts.allowFlip === false) this.allowedOps = ['cw', 'ccw'];
+      else this.allowedOps = ['cw60', 'ccw60'];
+      if (!this.allowedOps.length) throw new Error('No hay movimientos permitidos');
+      // ¿Puede cambiar la forma del tablero?
+      this.allowFlip = this.allowedOps.some((op) => SHAPE_OPS.includes(op));
       this.slotCount = this.target.slots.length;
       this.perm = Array.from({ length: this.slotCount }, (_, i) => i);
       this.history = [];
@@ -423,18 +446,19 @@
     /**
      * Valida un movimiento antes de ejecutarlo o animarlo.
      * @param {number} hexId
-     * @param {'cw'|'ccw'|'flip'} op
+     * @param {'cw60'|'cw'|'flip'|'ccw'|'ccw60'} op
      */
     validateMove(hexId, op) {
-      if (!OPS.includes(op)) return { ok: false, reason: 'Sólo se permiten giros de 120° o 240°' };
-      if (op === 'flip' && !this.allowFlip) {
-        return { ok: false, reason: 'El volteo de 180° está desactivado en esta partida' };
+      if (!OPS.includes(op)) return { ok: false, reason: 'Sólo se permiten giros múltiplos de 60°' };
+      if (!this.allowedOps.includes(op)) {
+        const list = [...new Set(this.allowedOps.map((o) => Math.min(OP_DEGREES[o], 360 - OP_DEGREES[o])))];
+        return { ok: false, reason: 'Sólo se permite girar ' + list.join('° o ') + '°' };
       }
       const h = this.hexagons[hexId];
       if (!h) return { ok: false, reason: 'No hay un cubito válido en ese punto' };
       const check = validateTriple(this.tiling, h.ring, h.key);
       if (!check.ok) return check;
-      if (op === 'flip') {
+      if (SHAPE_OPS.includes(op)) {
         const next = this.tiling.heights[h.flip.i] && this.tiling.heights[h.flip.i][h.flip.j];
         if (next === undefined || next + h.flip.delta < 0 || next + h.flip.delta > this.tiling.n) {
           return { ok: false, reason: 'El volteo sacaría un cubito de la caja' };
@@ -449,14 +473,19 @@
     _apply(hexId, op) {
       const h = this.hexagons[hexId];
       const before = { tiling: this.tiling, perm: this.perm.slice() };
-      if (op === 'flip') {
+      const cycle = (hex, turns) => {
+        const old = hex.ring.map((s) => this.perm[s]);
+        for (let k = 0; k < 3; k++) this.perm[hex.ring[(k + turns) % 3]] = old[k];
+      };
+      if (SHAPE_OPS.includes(op)) {
         const heights = cloneHeights(this.tiling.heights);
         heights[h.flip.i][h.flip.j] += h.flip.delta;
         this._setTiling(buildTiling(heights));
+        // 60° = 180° + 240° y 300° = 180° + 120°: tras el volteo, el mismo
+        // centro sigue siendo un cubito y completamos el giro sobre él.
+        if (op !== 'flip') cycle(this.hexByKey.get(h.key), op === 'cw60' ? 2 : 1);
       } else {
-        const turns = op === 'cw' ? 1 : 2;
-        const old = h.ring.map((s) => this.perm[s]);
-        for (let k = 0; k < 3; k++) this.perm[h.ring[(k + turns) % 3]] = old[k];
+        cycle(h, op === 'cw' ? 1 : 2);
       }
       return {
         op,
@@ -470,8 +499,8 @@
     }
 
     /**
-     * Ejecuta un movimiento: 'cw' (120° horario), 'ccw' (240° horario =
-     * 120° antihorario) o 'flip' (volteo de 180°).
+     * Ejecuta un movimiento: 'cw60' (60° horario), 'cw' (120°), 'flip' (180°),
+     * 'ccw' (240° = 120° antihorario) o 'ccw60' (300° = 60° antihorario).
      * @returns {{ok:boolean, reason?:string, transition?:object}}
      */
     move(hexId, op) {
@@ -678,8 +707,7 @@
         do h = this.hexagons[randInt(rng, this.hexagons.length)];
         while (h.key === lastKey && this.hexagons.length > 1 && ++guard < 20);
         lastKey = h.key;
-        const r = randInt(rng, this.allowFlip ? 3 : 2);
-        this._apply(h.id, OPS[r]);
+        this._apply(h.id, this.allowedOps[randInt(rng, this.allowedOps.length)]);
       }
       this.setState(this.perm, this.tiling.heights);
     }
@@ -711,7 +739,7 @@
         heights: cloneHeights(this.target.heights),
         current: cloneHeights(this.tiling.heights),
         mode: this.mode,
-        allowFlip: this.allowFlip,
+        allowedOps: this.allowedOps.slice(),
         perm: this.perm.slice(),
         history: this.history.slice(),
         future: this.future.slice(),
@@ -720,7 +748,7 @@
 
     /** Reconstruye una partida validando la forma, la paridad y el historial. */
     static deserialize(data) {
-      const opts = { heights: data.heights, mode: data.mode, allowFlip: data.allowFlip };
+      const opts = { heights: data.heights, mode: data.mode, allowedOps: data.allowedOps };
       const p = new ProppPuzzle(opts);
       p.setState(data.perm, data.current || data.heights);
       const okList = (list) => Array.isArray(list) && list.every((m) => m && typeof m.key === 'string' && OPS.includes(m.op));
@@ -756,6 +784,8 @@
     ORIENT,
     ORIENT_NAMES,
     NEXT60,
+    OPS,
+    OP_DEGREES,
     project,
     latticeKey,
     makeRng,

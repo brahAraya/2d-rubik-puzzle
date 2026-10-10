@@ -1,8 +1,11 @@
 # Propp Lozenge
 
-Motor de juego en HTML/CSS/JavaScript vanilla que reproduce la mecánica del puzzle
-**Propp Lozenge**: un tablero de rombos en rejilla isométrica que crea la ilusión
-de un cubo 3D formado por cubitos, en el que se giran grupos de tres rombos.
+Motor de juego en HTML/CSS/JavaScript vanilla que reproduce el puzzle
+**Propp Lozenge** (inventado por James Propp y diseñado por Oskar van Deventer):
+27 fichas en forma de rombo dentro de un marco hexagonal que crean la ilusión de
+un cubo 3D. Con una herramienta magnética se levanta un grupo hexagonal de tres
+fichas, se gira 60° y se vuelve a colocar. El objetivo es restaurar el cubo
+original.
 
 ## Cómo ejecutarlo
 
@@ -10,7 +13,7 @@ Abre `index.html` en el navegador. No hace falta compilar ni servidor: los
 scripts son clásicos (no módulos ES), así que también funcionan desde `file://`.
 
 ```bash
-npm test          # 24 tests del motor (node:test, sin dependencias)
+npm test          # 29 tests del motor (node:test, sin dependencias)
 npm run explore   # búsqueda de la mejor disposición inicial (opcional: N)
 ```
 
@@ -40,7 +43,7 @@ izquierda o derecha. Las **piezas** se mueven por las casillas. El sombreado
 depende de la orientación de la casilla, no de la pieza, así que la ilusión 3D
 se mantiene aunque el tablero esté desordenado.
 
-### Cubitos: la herramienta de 3 piezas
+### La herramienta de 3 piezas
 
 Un cubito girable es un vértice de la rejilla en el que convergen exactamente
 tres rombos, cada uno con su ángulo de 120° en ese punto. Juntos forman un
@@ -54,78 +57,71 @@ hexágono regular: la esquina visible de un cubito (convexo) o un rincón
   rombos distintos, uno de cada orientación, adyacentes dos a dos (comparten
   arista) y con el ángulo obtuso en el vértice común, y que no haya un cuarto
   rombo en ese punto.
-- Un giro de 120° o 240° transforma el hexágono en sí mismo: la teselación no
-  cambia y las tres piezas se permutan cíclicamente. La animación rota el grupo
-  e interpola el sombreado de cada pieza mientras pasa de una cara a otra.
 
-### Disposición inicial
+### El giro de 60°
 
-Con sólo giros de 120°/240° la teselación nunca cambia, y el cubo macizo tiene
-**un** único cubito girable (la esquina central): no sirve como puzzle.
-`scripts/explore.js` recorre las 980 particiones planas de 3×3×3. Las mejores
-son las pilas en escalera cortadas por un plano diagonal: **24 de 27 rombos
-móviles, 13 cubitos girables y una sola zona conexa**. La disposición por
-defecto («Cubo escalonado») usa ese corte para cualquier N.
+El **único movimiento** es girar el grupo 60°, en sentido horario o
+antihorario. Para girar más, se vuelve a girar: seis giros completan la vuelta.
 
-### Volteo de 180° (quitar / poner un cubito)
-
-Girar un hexágono de 3 rombos 180° lo convierte en la otra teselación del
-mismo hexágono: un cubito que sobresale desaparece y deja un rincón, o un
-rincón se rellena con un cubito. Es el «flip» clásico de las teselaciones por
-rombos y hace que aparezcan cubitos nuevos donde antes no había.
-
-Con el volteo activado (opción «Movimientos», por defecto en «Cubo macizo»),
-la **forma** del tablero también forma parte del estado y del objetivo: hay
-que reconstruir la pila original con sus colores. Así el cubo macizo se vuelve
-un puzzle completo en el que las 27 piezas se mueven.
+Un giro de 60° convierte el hexágono en su otra teselación: un cubito que
+sobresale pasa a ser un rincón y viceversa. Así cambia la forma de la pila y
+aparecen cubitos girables nuevos. La animación rota las tres fichas e
+interpola su sombreado mientras pasan de una cara a otra.
 
 Cada casilla tiene una identidad estable aunque cambie la forma (la cara
 superior de la columna (i, j), la cara +x de la fila (j, k) y la cara +y de la
-fila (i, k)). Al voltear, cada una de las tres piezas gira media vuelta y cae
-en la nueva posición de **su misma casilla**, con la misma orientación. Por
-eso el volteo cambia la forma pero no la permutación (verificado en los
-tests).
+fila (i, k)). Internamente, 60° = 180° + 240°: media vuelta deja cada ficha en
+la nueva posición de su misma casilla, y los 240° restantes son un 3-ciclo. Los
+tests verifican geométricamente que cada ficha acaba en la posición girada
+exactamente 60° y con la orientación correcta.
 
+El motor conserva también los giros de 120°, 180° y 240° y un modo que sólo
+permite 120°/240° (`allowedOps`), pero la interfaz sólo ofrece el giro de 60°,
+como el puzzle físico.
+
+### Disposiciones
+
+«Cubo (puzzle original)» es el cubo 3×3×3 macizo. Las demás disposiciones
+(cubo escalonado, pirámide, pila aleatoria) son variantes: la disposición
+elegida es también la forma que hay que recuperar. Se puede jugar con tamaños
+de 2 a 5.
 
 ### Objetivo
 
-- **Colores**: todas las caras superiores blancas, las izquierdas verdes y las
-  derechas rojas. Es lo que se ve de un cubo de Rubik estándar desde la esquina
-  U-F-R.
-- **Numerado** (difícil): cada pieza debe volver a su casilla exacta.
+- **Colores**: recuperar la forma original con todas las caras superiores
+  blancas, las izquierdas verdes y las derechas rojas.
+- **Numerado** (difícil): además, cada ficha debe volver a su casilla exacta.
 
-La partida empieza en un estado aleatorio uniforme entre los estados alcanzables.
+### Estado aleatorio y paridad
 
-### Paridad y estados imposibles
+Como en el puzzle físico, el estado inicial equivale a sacar todas las fichas
+y colocarlas al azar: una forma aleatoria (un paseo aleatorio de giros) con una
+colocación aleatoria de las fichas.
 
-Cada giro es un 3-ciclo, es decir, una permutación **par**, y el volteo no
-permuta piezas. Los 3-ciclos de una zona conexa generan exactamente el grupo
-alternado de esa zona. Por tanto un estado es alcanzable si y sólo si:
+Los giros de 120° son 3-ciclos (permutaciones **pares**) y la media vuelta no
+permuta fichas, así que toda secuencia de giros produce una permutación par.
+Los 3-ciclos de una zona conexa generan exactamente el grupo alternado sobre
+ella, y los cubitos de todas las formas posibles enlazan las 27 casillas (los
+tests lo comprueban de forma exhaustiva para N ≤ 3). Por tanto un estado es
+alcanzable si y sólo si la forma es una partición plana válida, las fichas son
+una permutación y esa permutación es par.
 
-1. la forma es una partición plana válida (y, sin volteo, la original),
-2. es una permutación de las piezas,
-3. ninguna pieza ha salido de su zona conexa,
-4. la permutación dentro de cada zona es par.
-
-Con volteo, cualquier forma es alcanzable y los cubitos de todas las formas
-enlazan todas las casillas en una sola zona. Los tests lo comprueban de forma
-exhaustiva para N ≤ 3.
-
-`analyze()` aplica este criterio. Un test lo verifica por fuerza bruta: en un
-tablero con zonas de 3 y 7 rombos, la exploración BFS alcanza exactamente
-|A₃|·|A₇| = 7560 estados. `randomize()` baraja cada zona y, si sale impar,
-`fixParity()` intercambia dos piezas del **mismo color** (en modo color el
-tablero se ve igual). Con volteo, además se elige una forma aleatoria mediante
-un paseo de volteos. `setState()` y la carga desde `localStorage` rechazan los
-estados imposibles. La cabecera muestra el estado de paridad en todo momento.
+En modo color, si la colocación aleatoria sale impar, `fixParity()`
+intercambia dos fichas del **mismo color** y el tablero se ve igual. Por eso
+**cualquier colocación aleatoria de las fichas tiene solución**, como dice la
+descripción del puzzle físico (hay un test que lo comprueba con 200
+colocaciones). En modo numerado la mitad de las colocaciones serían
+imposibles, y el generador sólo produce las alcanzables. `setState()` y la
+carga desde `localStorage` rechazan los estados imposibles, y la cabecera
+muestra la paridad en todo momento.
 
 ### Deshacer / rehacer
 
 El motor guarda una pila de movimientos `{key, op}`, donde `key` es el vértice
-central y `op` es `cw`, `ccw` o `flip`. Deshacer aplica el inverso (`cw`↔`ccw`;
-un volteo se deshace volteando otra vez) y lo pasa a la pila de rehacer. Un giro nuevo vacía la
-pila de rehacer. Los giros se animan en cola, así que pulsar Ctrl+Z varias
-veces seguidas se reproduce en orden. La partida (con su historial) se guarda en
+central y `op` es `cw60` o `ccw60`. Deshacer aplica el giro contrario en el
+mismo vértice y lo pasa a la pila de rehacer. Un giro nuevo vacía la pila de
+rehacer. Los giros se animan en cola, así que pulsar Ctrl+Z varias veces
+seguidas se reproduce en orden. La partida (con su historial) se guarda en
 `localStorage`.
 
 ## Controles
@@ -133,9 +129,8 @@ veces seguidas se reproduce en orden. La partida (con su historial) se guarda en
 | Acción | Ratón | Táctil | Teclado |
 | --- | --- | --- | --- |
 | Seleccionar cubito | mover el puntero | tocar | flechas |
-| Girar 120° horario | clic | volver a tocar | `E` / `Enter` |
-| Girar 240° | Mayús+clic / clic derecho | botón ↺ | `Q` |
-| Voltear 180° (si está activado) | Alt+clic | botón ⇅ | `F` |
+| Girar 60° horario | clic | volver a tocar | `E` / `Enter` |
+| Girar 60° antihorario | Mayús+clic / clic derecho | botón ↺ | `Q` |
 | Deshacer / rehacer | botones | botones | `Ctrl+Z` / `Ctrl+Y` |
 
 ## Estructura

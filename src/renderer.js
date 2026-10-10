@@ -185,10 +185,11 @@
       this.toolDot.setAttribute('cy', c[1] * SCALE);
 
       if (valid) {
-        // Flecha circular que indica el giro horario de 120°.
+        // Flecha circular que indica el giro del clic (60° o 120° horario).
         const rad = 0.42 * SCALE;
-        const a0 = -Math.PI / 2 - 0.9;
-        const a1 = a0 + (2 * Math.PI) / 3 + 0.5;
+        const sweep = this.puzzle.allowFlip ? Math.PI / 3 : (2 * Math.PI) / 3;
+        const a0 = -Math.PI / 2 - 0.25 - sweep / 2;
+        const a1 = a0 + sweep + 0.5;
         const x0 = c[0] * SCALE + rad * Math.cos(a0);
         const y0 = c[1] * SCALE + rad * Math.sin(a0);
         const x1 = c[0] * SCALE + rad * Math.cos(a1);
@@ -237,7 +238,9 @@
       this.animating = true;
       const p = this.puzzle;
       const c = job.center;
-      const steps60 = Math.round(job.angle / (Math.PI / 3));
+      const steps60 = Math.round(Math.abs(job.angle) / (Math.PI / 3));
+      // Girar −60° equivale a avanzar dos pasos de +60° en el ciclo de orientaciones.
+      const step = (o) => (job.angle > 0 ? ProppCore.NEXT60[o] : ProppCore.NEXT60[ProppCore.NEXT60[o]]);
       const duration = this.duration * (0.55 + 0.225 * steps60);
 
       this.paint(job.before);
@@ -253,7 +256,7 @@
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
         // Orientación que va adoptando el rombo cada 60° de giro.
         const orients = [s.orient];
-        for (let k = 0; k < steps60; k++) orients.push(ProppCore.NEXT60[orients[k]]);
+        for (let k = 0; k < steps60; k++) orients.push(step(orients[k]));
         return { s, piece, path, label, orients };
       });
 
@@ -265,7 +268,7 @@
         const deg = (a * 180) / Math.PI;
         const tf = `rotate(${deg} ${c[0] * SCALE} ${c[1] * SCALE})`;
         // Interpolamos la luz entre las orientaciones por las que pasa el rombo.
-        const steps = a / (Math.PI / 3);
+        const steps = Math.abs(a) / (Math.PI / 3);
         const i = Math.min(Math.floor(steps), steps60 - 1);
         const f = steps - i;
         moving.forEach((m) => {

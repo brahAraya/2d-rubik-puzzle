@@ -6,14 +6,14 @@
 
   const { ProppPuzzle } = ProppCore;
   const { PRESETS } = ProppPresets;
-  const STORAGE_KEY = 'propp-lozenge-v2';
+  const STORAGE_KEY = 'propp-lozenge-v3';
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const $ = (id) => document.getElementById(id);
   const ui = {
     board: $('board'), moves: $('moves'), time: $('time'), progress: $('progress'), parity: $('parity'),
     status: $('status'), info: $('info'), win: $('win'), winDetail: $('win-detail'),
-    size: $('size'), preset: $('preset'), mode: $('mode'), flip: $('flip'), flipBtn: $('flip-btn'),
+    size: $('size'), preset: $('preset'), mode: $('mode'),
   };
 
   for (const key in PRESETS) {
@@ -32,7 +32,7 @@
   });
 
   let puzzle = null;
-  let presetKey = 'escalonado';
+  let presetKey = 'macizo';
   let timer = { start: 0, elapsed: 0, running: false };
   let won = false;
   let selectedKey = null; // vértice de la herramienta de selección
@@ -40,11 +40,12 @@
 
   /* ---------------- Partida ---------------- */
 
-  function newPuzzle(n, preset, mode, allowFlip, state) {
+  function newPuzzle(n, preset, mode, state) {
     presetKey = preset;
+    // Único movimiento: el giro mínimo de 60° (horario o antihorario).
     puzzle = state
       ? ProppPuzzle.deserialize(state)
-      : new ProppPuzzle({ heights: PRESETS[preset].build(n), mode, allowFlip });
+      : new ProppPuzzle({ heights: PRESETS[preset].build(n), mode });
     puzzle.on(() => {
       updateHud();
       save();
@@ -55,21 +56,14 @@
     ui.size.value = String(puzzle.target.n);
     ui.preset.value = presetKey;
     ui.mode.value = puzzle.mode;
-    ui.flip.value = puzzle.allowFlip ? 'si' : 'no';
-    ui.flipBtn.disabled = !puzzle.allowFlip;
-    const fixed = puzzle.slotCount - puzzle.everMovable.filter(Boolean).length;
-    const zones = puzzle.components.filter((c) => c.length > 1).length;
-    ui.info.textContent = puzzle.allowFlip
-      ? 'Con volteo la forma también se desordena: hay que reconstruir la pila original y sus colores. ' +
-        'Las ' + puzzle.slotCount + ' piezas son móviles.'
-      : puzzle.target.hexagons.length + ' cubitos girables · ' + zones + ' zona(s) conexa(s) · ' +
-        fixed + ' de ' + puzzle.slotCount + ' rombos fijos' +
-        (puzzle.target.hexagons.length <= 1 ? '. Activa el volteo de 180° para poder desordenar todo el cubo.' : '');
+    ui.info.textContent =
+      'Cada giro de 60° cambia el patrón: un cubito que sobresale pasa a ser un rincón y viceversa. ' +
+      'Hay que recuperar la forma original con sus colores. ' + puzzle.slotCount + ' fichas.';
     updateHud();
   }
 
   function rebuild() {
-    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value, ui.flip.value === 'si');
+    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value);
     startRandom();
   }
 
@@ -89,11 +83,16 @@
 
   /* ---------------- Movimientos ---------------- */
 
+  // Giro mínimo de la herramienta magnética.
+  function stepOp(dir) {
+    return dir > 0 ? 'cw60' : 'ccw60';
+  }
+
   function selectedHex() {
     return selectedKey === null ? -1 : puzzle.hexAt(selectedKey);
   }
 
-  /** op: 'cw' (120°), 'ccw' (240°) o 'flip' (volteo de 180°). */
+  /** op: 'cw60' (60° horario) o 'ccw60' (60° antihorario). */
   function act(op) {
     const res = puzzle.move(selectedHex(), op);
     if (!res.ok) {
@@ -154,10 +153,7 @@
         : 'Aquí convergen ' + n + ' rombos: no forman un cubito de 3 piezas.', true, true);
     } else {
       const h = puzzle.hexagons[v.hex];
-      const flipHint = puzzle.allowFlip
-        ? (h.kind === 'convexo' ? ' · F: quitar el cubito' : ' · F: poner un cubito')
-        : '';
-      say('Cubito ' + h.kind + ' seleccionado' + flipHint, false, true);
+      say('Cubito ' + h.kind + ' seleccionado · clic: 60° horario · Mayús+clic o clic derecho: 60° antihorario', false, true);
     }
   }
 
@@ -228,19 +224,19 @@
   });
   ui.board.addEventListener('click', (e) => {
     if (lastPointer === 'touch') {
-      if (touchPending) act('cw');
+      if (touchPending) act(stepOp(1));
       touchPending = false;
       return;
     }
     const q = view.toLattice(e);
     if (q) selectAt(q[0], q[1]);
-    act(e.altKey ? 'flip' : e.shiftKey ? 'ccw' : 'cw');
+    act(stepOp(e.shiftKey ? -1 : 1));
   });
   ui.board.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     const q = view.toLattice(e);
     if (q) selectAt(q[0], q[1]);
-    act('ccw');
+    act(stepOp(-1));
   });
 
   document.addEventListener('keydown', (e) => {
@@ -263,17 +259,14 @@
     }
     if (k === 'e' || (k === 'enter' && e.target === document.body)) {
       e.preventDefault();
-      act('cw');
+      act(stepOp(1));
     } else if (k === 'q') {
-      act('ccw');
-    } else if (k === 'f') {
-      act('flip');
+      act(stepOp(-1));
     }
   });
 
-  $('rot-cw').addEventListener('click', () => act('cw'));
-  $('rot-ccw').addEventListener('click', () => act('ccw'));
-  ui.flipBtn.addEventListener('click', () => act('flip'));
+  $('rot-cw').addEventListener('click', () => act(stepOp(1)));
+  $('rot-ccw').addEventListener('click', () => act(stepOp(-1)));
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
@@ -282,7 +275,7 @@
     puzzle.scramble(30);
     view.sync();
     resetTimer();
-    say(puzzle.allowFlip ? 'Mezclado con 30 giros y volteos aleatorios.' : 'Mezclado con 30 giros aleatorios.');
+    say('Mezclado con 30 giros aleatorios de 60°.');
   });
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
@@ -290,12 +283,7 @@
     resetTimer();
   });
   ui.size.addEventListener('change', rebuild);
-  ui.flip.addEventListener('change', rebuild);
-  ui.preset.addEventListener('change', () => {
-    // El cubo macizo sólo es un puzzle con volteo: lo activamos por defecto.
-    ui.flip.value = PRESETS[ui.preset.value].flip ? 'si' : 'no';
-    rebuild();
-  });
+  ui.preset.addEventListener('change', rebuild);
   ui.mode.addEventListener('change', () => {
     puzzle.setMode(ui.mode.value);
     view.paint();
@@ -351,7 +339,7 @@
       const data = JSON.parse(raw);
       if (!PRESETS[data.preset]) return false;
       // deserialize valida la partición plana y la paridad del estado guardado.
-      newPuzzle(0, data.preset, null, null, data.state);
+      newPuzzle(0, data.preset, null, data.state);
       timer.elapsed = data.elapsed || 0;
       won = puzzle.isSolved() && puzzle.moveCount > 0;
       return true;
@@ -361,7 +349,7 @@
   }
 
   if (!load()) {
-    newPuzzle(3, 'escalonado', 'color', false);
+    newPuzzle(3, 'macizo', 'color');
     startRandom();
   }
 })();

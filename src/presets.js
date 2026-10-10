@@ -1,15 +1,11 @@
 /*
- * Disposiciones iniciales del tablero (particiones planas).
+ * Disposiciones del tablero (particiones planas). La disposición es a la vez
+ * la forma del estado resuelto: el objetivo es volver a ella con sus colores.
  *
- * El cubo macizo N×N×N sólo tiene UN cubito girable (la esquina central), así
- * que no sirve como puzzle. Las pilas "en escalera" cortadas por un plano
- * diagonal i + j + k ≈ c maximizan el número de cubitos girables y de rombos
- * móviles, y conservan la silueta hexagonal de un cubo visto en isométrico.
- * Para N = 3 la opción por defecto deja 24 de 27 rombos móviles, 13 cubitos
- * girables y una única zona conexa (búsqueda exhaustiva en scripts/explore.js).
- *
- * Con el volteo de 180° activado (`flip: true`, por defecto en el cubo macizo)
- * la forma también cambia, así que cualquier disposición sirve como objetivo.
+ * «Cubo» es el puzzle original: 27 rombos que forman un cubo 3×3×3 macizo.
+ * Las demás son variantes. Las pilas en escalera cortadas por un plano
+ * diagonal i + j + k ≈ c tienen el máximo número de cubitos girables
+ * (13 para N = 3; búsqueda exhaustiva en scripts/explore.js).
  */
 (function (root, factory) {
   const api = factory();
@@ -50,10 +46,10 @@
   }
 
   const PRESETS = {
+    macizo: { label: 'Cubo (puzzle original)', build: solidCube },
     escalonado: { label: 'Cubo escalonado', build: steppedCube },
     piramide: { label: 'Pirámide', build: pyramid },
     aleatorio: { label: 'Pila aleatoria', build: randomStack },
-    macizo: { label: 'Cubo macizo', build: solidCube, flip: true },
   };
 
   return { PRESETS, diagonalCut, steppedCube, pyramid, solidCube, randomStack };

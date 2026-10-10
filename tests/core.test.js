@@ -65,13 +65,13 @@ test('todos los cubitos detectados pasan la validación de adyacencia', () => {
 });
 
 test('el cubo macizo sólo tiene un cubito girable', () => {
-  const p = new ProppPuzzle({ heights: P.solidCube(3) });
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: false });
   assert.equal(p.hexagons.length, 1);
   assert.equal(p.hexagons[0].kind, 'convexo');
 });
 
 test('el tablero por defecto (N=3) maximiza las piezas móviles', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   assert.equal(p.hexagons.length, 13);
   assert.equal(p.movable.filter(Boolean).length, 24);
   assert.equal(p.components.filter((c) => c.length > 1).length, 1);
@@ -93,7 +93,7 @@ test('validateTriple bloquea grupos que no forman un cubito', () => {
 });
 
 test('rotar 3 veces 120° (o 120° + 240°) es la identidad', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   for (const h of p.hexagons) {
     p.rotate(h.id, 1);
     assert.equal(p.isSolved(), false, 'un giro debe cambiar el tablero');
@@ -107,7 +107,7 @@ test('rotar 3 veces 120° (o 120° + 240°) es la identidad', () => {
 });
 
 test('el giro es geométrico: cada pieza va a la casilla girada +120°', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   const h = p.hexagons[0];
   const before = h.ring.map((s) => p.perm[s]);
   p.rotate(h.id, 1);
@@ -121,7 +121,7 @@ test('el giro es geométrico: cada pieza va a la casilla girada +120°', () => {
 });
 
 test('se bloquean giros ilegales', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   assert.equal(p.rotate(0, 3).ok, false);
   assert.equal(p.rotate(0, 0).ok, false);
   assert.equal(p.rotate(999, 1).ok, false);
@@ -131,7 +131,7 @@ test('se bloquean giros ilegales', () => {
 });
 
 test('undo/redo restauran exactamente los estados', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   const rng = makeRng(7);
   const states = [p.perm.slice()];
   for (let i = 0; i < 40; i++) {
@@ -156,7 +156,7 @@ test('undo/redo restauran exactamente los estados', () => {
 
 test('los giros alcanzan exactamente las permutaciones pares de cada zona', () => {
   // Tablero pequeño con zonas de 3 y 7 rombos: se puede explorar entero.
-  const p = new ProppPuzzle({ heights: [[1, 1], [1, 0]] });
+  const p = new ProppPuzzle({ heights: [[1, 1], [1, 0]], allowFlip: false });
   const sizes = p.components.map((c) => c.length).filter((x) => x > 1).sort();
   assert.deepEqual(sizes, [3, 7]);
   const start = p.perm.slice();
@@ -180,7 +180,7 @@ test('los giros alcanzan exactamente las permutaciones pares de cada zona', () =
 });
 
 test('la validación de paridad detecta estados imposibles', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'numerado' });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'numerado', allowFlip: false });
   const comp = p.components.find((c) => c.length > 1);
   const odd = p.perm.slice();
   [odd[comp[0]], odd[comp[1]]] = [odd[comp[1]], odd[comp[0]]];
@@ -199,7 +199,7 @@ test('la validación de paridad detecta estados imposibles', () => {
 });
 
 test('fixParity en modo color no cambia el aspecto del tablero', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'color' });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'color', allowFlip: false });
   const comp = p.components.find((c) => c.length > 1);
   const odd = p.perm.slice();
   [odd[comp[0]], odd[comp[1]]] = [odd[comp[1]], odd[comp[0]]];
@@ -212,7 +212,7 @@ test('fixParity en modo color no cambia el aspecto del tablero', () => {
 test('randomize genera estados alcanzables y desordenados', () => {
   for (const mode of ['color', 'numerado']) {
     for (const n of [2, 3, 4]) {
-      const p = new ProppPuzzle({ heights: P.steppedCube(n), mode });
+      const p = new ProppPuzzle({ heights: P.steppedCube(n), mode, allowFlip: false });
       const rng = makeRng(n * 31);
       for (let i = 0; i < 20; i++) {
         p.randomize(rng);
@@ -225,13 +225,13 @@ test('randomize genera estados alcanzables y desordenados', () => {
 });
 
 test('scramble por giros siempre produce estados resolubles', () => {
-  const p = new ProppPuzzle({ heights: P.randomStack(4, makeRng(3)) });
+  const p = new ProppPuzzle({ heights: P.randomStack(4, makeRng(3)), allowFlip: false });
   p.scramble(200, makeRng(5));
   assert.ok(p.analyze().solvable);
 });
 
 test('serialize / deserialize', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'numerado' });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), mode: 'numerado', allowFlip: false });
   p.randomize(makeRng(1));
   p.rotate(2, 1);
   p.rotate(4, 2);
@@ -249,7 +249,7 @@ test('serialize / deserialize', () => {
 });
 
 test('nearestHexagon encaja con el punto de convergencia más cercano', () => {
-  const p = new ProppPuzzle({ heights: P.steppedCube(3) });
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
   for (const h of p.hexagons) {
     assert.equal(p.nearestHexagon(h.center[0] + 0.1, h.center[1] - 0.05), h.id);
   }
@@ -367,9 +367,94 @@ test('cubo macizo con volteo: se puede resolver deshaciendo una mezcla', () => {
 });
 
 test('sin volteo, voltear está bloqueado y la forma no puede cambiar', () => {
-  const p = new ProppPuzzle({ heights: P.solidCube(3) });
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: false });
   assert.equal(p.flip(0).ok, false);
   const other = P.steppedCube(3);
   assert.equal(p.analyze(p.perm, other).solvable, false);
   assert.throws(() => p.setState(p.perm, other));
+});
+
+/* ---------------- Giros de 60° ---------------- */
+
+test('el giro de 60° lleva cada pieza a la casilla girada 60°', () => {
+  for (const h of allPartitions(3)) {
+    const p = new ProppPuzzle({ heights: h, allowFlip: true });
+    for (const hex of p.hexagons) {
+      for (const [op, sign] of [['cw60', 1], ['ccw60', -1]]) {
+        const q = new ProppPuzzle({ heights: h, allowFlip: true });
+        const res = q.move(hex.id, op);
+        assert.ok(res.ok, res.reason);
+        for (const s of hex.ring) {
+          const piece = p.perm[s];
+          const t = q.perm.indexOf(piece);
+          const target = C.rotatePoint(p.tiling.slots[s].centroid, hex.center, (sign * Math.PI) / 3);
+          const c = q.tiling.slots[t].centroid;
+          assert.ok(Math.hypot(target[0] - c[0], target[1] - c[1]) < 1e-9, op + ' en ' + hex.key);
+          const o = p.tiling.slots[s].orient;
+          assert.equal(q.tiling.slots[t].orient, sign > 0 ? C.NEXT60[o] : C.NEXT60[C.NEXT60[o]]);
+        }
+      }
+    }
+  }
+});
+
+test('seis giros de 60° vuelven al inicio; 60° y −60° se anulan', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: true, mode: 'numerado' });
+  for (let i = 0; i < 6; i++) {
+    assert.ok(p.move(p.hexAt('0,0'), 'cw60').ok);
+    if (i < 5) assert.equal(p.isSolved(), false);
+  }
+  assert.ok(p.isSolved());
+  p.move(p.hexAt('0,0'), 'cw60');
+  p.move(p.hexAt('0,0'), 'ccw60');
+  assert.ok(p.isSolved());
+  p.undo();
+  p.undo();
+  p.redo();
+  assert.equal(p.isSolved(), false);
+});
+
+test('sin cambio de forma se bloquean 60°, 180° y 300°', () => {
+  const p = new ProppPuzzle({ heights: P.steppedCube(3), allowFlip: false });
+  for (const op of ['cw60', 'flip', 'ccw60']) assert.equal(p.move(0, op).ok, false);
+  assert.equal(p.move(0, 'cw').ok, true);
+});
+
+test('una colocación completamente aleatoria de las 27 fichas siempre tiene solución (modo color)', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: true });
+  const rng = makeRng(99);
+  for (let i = 0; i < 200; i++) {
+    // Cualquier permutación: si es impar, intercambiar dos fichas del mismo
+    // color la vuelve par sin cambiar lo que se ve.
+    const perm = Array.from({ length: 27 }, (_, k) => k);
+    for (let k = 26; k > 0; k--) {
+      const r = Math.floor(rng() * (k + 1));
+      [perm[k], perm[r]] = [perm[r], perm[k]];
+    }
+    const colors = perm.map((x) => p.pieceColor(x));
+    p.fixParity(perm, p.target.heights);
+    assert.ok(p.analyze(perm, p.target.heights).solvable);
+    assert.deepEqual(perm.map((x) => p.pieceColor(x)), colors);
+  }
+});
+
+test('por defecto (como el puzzle físico) sólo se permite girar 60°', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3) });
+  assert.deepEqual(p.allowedOps, ['cw60', 'ccw60']);
+  for (const op of ['cw', 'ccw', 'flip']) {
+    const r = p.move(0, op);
+    assert.equal(r.ok, false);
+    assert.match(r.reason, /60°/);
+  }
+  assert.ok(p.move(0, 'cw60').ok);
+  // 120° = dos giros de 60°.
+  const q = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: true });
+  q.move(0, 'cw');
+  p.move(p.hexAt('0,0'), 'cw60');
+  assert.deepEqual(p.perm, q.perm);
+  assert.ok(C.sameHeights(p.heights, q.heights));
+  // Mezclar y deserializar respetan los movimientos permitidos.
+  p.scramble(100, makeRng(4));
+  const r = ProppPuzzle.deserialize(JSON.parse(JSON.stringify(p.serialize())));
+  assert.deepEqual(r.allowedOps, ['cw60', 'ccw60']);
 });
