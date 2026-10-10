@@ -49,8 +49,13 @@ browser. No build step or server is needed.
 - **Rotate:** click to rotate the group 60° clockwise. That is the only move.
   To rotate further, click again; six clicks bring the group back to where it
   started.
+- **Rotate the board:** the ↻ button (or the `R` key) turns the whole board
+  60°, like turning the frame of the physical puzzle. It does not count as a
+  move, and you can win in any orientation. Turned 60°, the solid cube looks
+  like a hollow corner.
 - **Touch:** tap to select a group, then tap it again to rotate it.
-- **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates.
+- **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates, `R`
+  rotates the board.
 - **Undo / redo:** use the icon buttons (hover over them to see the shortcut),
   or `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` on a Mac).
 - **Language and theme:** the top of the side panel has a language picker
@@ -83,8 +88,14 @@ including the move history. You can also play 2×2×2, 4×4×4 and 5×5×5 versi
   permutation is always reachable. When a random arrangement comes out odd, two
   tiles of the same colour are swapped. That fixes the parity without changing
   how the board looks, which is why any random arrangement is solvable.
-- **Winning:** the game checks that the board has the solid cube shape and
-  that the nine tiles of each face share a colour, whichever it is.
+- **Winning:** the game checks that the board has the solid cube shape, seen
+  with the board in any orientation, and that the nine tiles of each face
+  share a colour, whichever it is.
+- **Board rotation:** it only changes the view, not the puzzle state. Turning
+  the hexagon 120° permutes the three axes of the stack, and turning it 180°
+  swaps the stack for its complement in the box (the solid cube becomes the
+  empty corner). The tests check that these shapes match the rotated tile
+  geometry.
 - **Undo / redo:** each move is stored as its centre point. Undo applies a
   −60° rotation at the same point.
 

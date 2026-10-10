@@ -117,8 +117,10 @@
       this.queue = [];
       this.animating = false;
       this.onIdle = opts.onIdle || (() => {});
+      this.onViewChange = opts.onViewChange || null;
       this.toolTween = opts.toolTween != null ? opts.toolTween : TOOL_TWEEN_MS;
       this.pieceDim = 1;
+      this.viewTurns = 0; // giro del tablero completo, en pasos de 60° horarios
       this.selKey = null; // vértice seleccionado (clave de rejilla)
       this.toolState = null; // forma dibujada ahora mismo (puede estar a medio camino)
     }
@@ -148,15 +150,20 @@
         const a = -Math.PI / 2 + (k * Math.PI) / 3;
         return [n * Math.cos(a), n * Math.sin(a)];
       });
-      el('path', { d: pathFrom(outline), class: 'board-shadow' }, svg);
-
-      this.slotLayer = el('g', { class: 'slots' }, svg);
-      this.labelLayer = el('g', { class: 'labels' }, svg);
+      // `world` contiene todo lo que gira al girar el tablero completo, incluido
+      // el fondo y el contorno del hexágono. La sombra se aplica con CSS a todo
+      // el SVG, así que no cambia de dirección al girar.
+      this.world = el('g', { class: 'world' }, svg);
+      el('path', { d: pathFrom(outline), class: 'board-shadow' }, this.world);
+      this.slotLayer = el('g', { class: 'slots' }, this.world);
+      this.labelLayer = el('g', { class: 'labels' }, this.world);
       // El borde exterior va debajo de las piezas en movimiento y de la
       // herramienta de selección, para que sus contornos se vean completos.
-      el('path', { d: pathFrom(outline), class: 'board-outline' }, svg);
-      this.animLayer = el('g', { class: 'anim' }, svg);
-      this.toolLayer = el('g', { class: 'tool', 'aria-hidden': 'true' }, svg);
+      el('path', { d: pathFrom(outline), class: 'board-outline' }, this.world);
+      this.overLayer = el('g', { class: 'world-over' }, svg);
+      this.animLayer = el('g', { class: 'anim' }, this.overLayer);
+      this.toolLayer = el('g', { class: 'tool', 'aria-hidden': 'true' }, this.overLayer);
+      this._applyViewTransform(this.viewTurns * 60);
 
       // La identidad de cada casilla es estable; su geometría cambia con los volteos.
       this.slotEls = puzzle.target.slots.map((s) => el('path', { class: 'slot orient-' + s.orient }, this.slotLayer));
@@ -190,6 +197,69 @@
     }
 
     /* ---------------- Pintado ---------------- */
+
+    /**
+     * Orientación con la que se VE una casilla con el tablero girado: cada
+     * 60° de giro convierte una cara superior en izquierda, etc. El
+     * sombreado usa esta orientación para que la ilusión 3D se mantenga.
+     */
+    _vis(orient) {
+      let o = orient;
+      for (let k = 0; k < this.viewTurns; k++) o = ProppCore.NEXT60[o];
+      return o;
+    }
+
+    _applyViewTransform(deg) {
+      const tf = deg % 360 === 0 ? null : `rotate(${deg} 0 0)`;
+      for (const g of [this.world, this.overLayer]) {
+        if (tf) g.setAttribute('transform', tf);
+        else g.removeAttribute('transform');
+      }
+    }
+
+    /** Fija el giro del tablero sin animar (al cargar una partida). */
+    setViewTurns(turns) {
+      this.viewTurns = ((turns % 6) + 6) % 6;
+      if (!this.world) return;
+      this._applyViewTransform(this.viewTurns * 60);
+      if (!this.animating) this.paint();
+    }
+
+    /** Gira el tablero completo 60° en sentido horario (animado, en cola). */
+    rotateView() {
+      this.queue.push({ type: 'view' });
+      if (!this.animating) this._next();
+    }
+
+    _animateView() {
+      const from = this.viewTurns;
+      const to = from + 1;
+      const tiling = this.display.tiling;
+      const perm = this.display.perm;
+      const duration = this.duration * 1.3;
+      const start = performance.now();
+      const frame = (now) => {
+        const t = duration > 0 ? Math.min(1, Math.max(0, (now - start) / duration)) : 1;
+        const f = ease(t);
+        this._applyViewTransform((from + f) * 60);
+        // Cada rombo pasa de su orientación visible a la siguiente: interpolamos la luz.
+        tiling.slots.forEach((s) => {
+          const o = this._vis(s.orient);
+          const light = LIGHT[o] * (1 - f) + LIGHT[ProppCore.NEXT60[o]] * f;
+          this.slotEls[s.id].setAttribute('fill', this.fillFor(perm[s.id], light));
+        });
+        if (t < 1) {
+          this._raf = requestAnimationFrame(frame);
+        } else {
+          this.viewTurns = to % 6;
+          this._applyViewTransform(this.viewTurns * 60);
+          this.paint();
+          if (this.onViewChange) this.onViewChange(this.viewTurns);
+          this._next();
+        }
+      };
+      this._raf = requestAnimationFrame(frame);
+    }
 
     fillFor(piece, light) {
       return shade(PIECE_RGB[this.puzzle.pieceColor(piece)], light * this.pieceDim);
@@ -229,7 +299,7 @@
       tiling.slots.forEach((s) => {
         const piece = perm[s.id];
         const path = this.slotEls[s.id];
-        path.setAttribute('fill', this.fillFor(piece, LIGHT[s.orient]));
+        path.setAttribute('fill', this.fillFor(piece, LIGHT[this._vis(s.orient)]));
         path.classList.remove('hole');
         const label = this.labelEls[s.id];
         label.textContent = numbered && p.everMovable[piece] ? this.pieceNumber[piece] : '';
@@ -357,6 +427,7 @@
         return;
       }
       this.animating = true;
+      if (job.type === 'view') return this._animateView();
       const p = this.puzzle;
       const c = job.center;
       const steps60 = Math.round(Math.abs(job.angle) / (Math.PI / 3));
@@ -376,7 +447,7 @@
         if (p.mode === 'numerado' && p.everMovable[piece]) label.textContent = this.pieceNumber[piece];
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
         // Orientación que va adoptando el rombo cada 60° de giro.
-        const orients = [s.orient];
+        const orients = [this._vis(s.orient)];
         for (let k = 0; k < steps60; k++) orients.push(step(orients[k]));
         return { s, piece, path, label, orients };
       });
@@ -426,7 +497,9 @@
       const m = this.svg.getScreenCTM();
       if (!m) return null;
       const q = pt.matrixTransform(m.inverse());
-      return [q.x / SCALE, q.y / SCALE];
+      // Deshacemos el giro del tablero para trabajar en coordenadas de rejilla.
+      const back = ProppCore.rotatePoint([q.x / SCALE, q.y / SCALE], [0, 0], (-this.viewTurns * Math.PI) / 3);
+      return back;
     }
   }
 

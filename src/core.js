@@ -309,6 +309,34 @@
   }
 
   /**
+   * Formas que se obtienen al girar el tablero completo en múltiplos de 60°.
+   * En 3D, girar el hexágono 120° permuta cíclicamente los ejes (x, y, z) y
+   * girarlo 180° cambia la pila por su complemento dentro de la caja (el cubo
+   * macizo pasa a ser el rincón vacío). Combinando ambas salen los 6 giros.
+   * Los tests verifican que coinciden con girar la geometría de los rombos.
+   */
+  function boardRotationShapes(heights) {
+    const n = heights.length;
+    const has = (h, i, j, k) => k < h[i][j];
+    const build = (f) => {
+      const out = Array.from({ length: n }, () => new Array(n).fill(0));
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        let c = 0;
+        for (let k = 0; k < n; k++) if (f(i, j, k)) c++;
+        out[i][j] = c;
+      }
+      return out;
+    };
+    const cyc1 = build((i, j, k) => has(heights, k, i, j));
+    const cyc2 = build((i, j, k) => has(heights, j, k, i));
+    const shapes = [heights, cyc1, cyc2].flatMap((h) => [
+      cloneHeights(h),
+      build((i, j, k) => !has(h, n - 1 - i, n - 1 - j, n - 1 - k)),
+    ]);
+    return shapes;
+  }
+
+  /**
    * Estado = forma (partición plana) + permutación de piezas.
    *
    * Las casillas tienen una identidad estable aunque cambie la forma: la cara
@@ -349,6 +377,8 @@
       this.listeners = new Set();
       this._setTiling(this.target);
       this._buildComponents();
+      // Formas que, vistas con el tablero girado, son la forma objetivo.
+      this.targetShapes = boardRotationShapes(this.target.heights);
     }
 
     /* ---- Estructura ---- */
@@ -571,19 +601,22 @@
     }
 
     /**
-     * Resuelto = la forma original y:
-     *  - modo color: cada cara (orientación) de un solo color, sea cual sea.
-     *    Vale cualquiera de las 6 formas de repartir los 3 colores entre las
-     *    3 caras (p. ej. verde arriba o verde a la izquierda); todas son
-     *    alcanzables porque en modo color cualquier colocación tiene solución.
-     *  - modo numerado: cada pieza en su casilla exacta.
+     * Resuelto:
+     *  - modo color: la forma original vista con el tablero en cualquier
+     *    orientación (girar el tablero 60° convierte el cubo macizo en el
+     *    rincón vacío) y cada cara (orientación) de un solo color, sea cual
+     *    sea. Vale cualquier reparto de los 3 colores entre las 3 caras; todos
+     *    son alcanzables porque en modo color cualquier colocación tiene
+     *    solución.
+     *  - modo numerado: la forma original y cada pieza en su casilla exacta.
      */
     _isSolvedState(perm, heights) {
-      if (!sameHeights(heights, this.target.heights)) return false;
       if (this.mode === 'numerado') {
+        if (!sameHeights(heights, this.target.heights)) return false;
         for (let s = 0; s < this.slotCount; s++) if (perm[s] !== s) return false;
         return true;
       }
+      if (!this.targetShapes.some((h) => sameHeights(h, heights))) return false;
       const faceColor = [-1, -1, -1];
       for (let s = 0; s < this.slotCount; s++) {
         const o = this.target.slots[s].orient;
@@ -817,6 +850,7 @@
     parityOn,
     rotatePoint,
     sameHeights,
+    boardRotationShapes,
     ProppPuzzle,
   };
 });

@@ -505,3 +505,40 @@ test('modo color: gana cualquier reparto de los 3 colores entre las 3 caras', ()
   p.move(p.hexAt('0,0'), 'cw60');
   assert.equal(p.isSolved(), false);
 });
+
+/* ---------------- Giro del tablero completo ---------------- */
+
+function geometryKey(tiling, angle) {
+  return tiling.slots
+    .map((s) => s.corners.map((p) => C.rotatePoint(p, [0, 0], angle)).map((p) => p.map((v) => (Math.round(v * 1000) / 1000 + 0).toFixed(3)).join(',')).sort().join(';'))
+    .sort()
+    .join('|');
+}
+
+test('las formas del tablero girado coinciden con girar la geometría de los rombos', () => {
+  for (const n of [1, 2, 3]) {
+    for (const h of allPartitions(n)) {
+      const t = buildTiling(h);
+      const orbit = C.boardRotationShapes(h).map((x) => geometryKey(buildTiling(x), 0));
+      for (let k = 0; k < 6; k++) {
+        assert.ok(orbit.includes(geometryKey(t, (k * Math.PI) / 3)), 'giro ' + k * 60 + '° de ' + JSON.stringify(h));
+      }
+      // Y cada forma de la órbita es algún giro de la original.
+      const rotations = [0, 1, 2, 3, 4, 5].map((k) => geometryKey(t, (k * Math.PI) / 3));
+      for (const g of orbit) assert.ok(rotations.includes(g));
+    }
+  }
+});
+
+test('el cubo visto con el tablero girado 60° (rincón vacío) también cuenta como resuelto', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), mode: 'color', allowedOps: ['cw60'] });
+  const empty = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  assert.ok(p.targetShapes.some((h) => C.sameHeights(h, empty)));
+  const pool = [[], [], []];
+  for (let piece = 0; piece < 27; piece++) pool[p.pieceColor(piece)].push(piece);
+  const perm = Array.from({ length: 27 }, (_, s) => pool[(p.target.slots[s].orient + 1) % 3].pop());
+  p.fixParity(perm, empty);
+  assert.ok(p.analyze(perm, empty).solvable);
+  p.setState(perm, empty);
+  assert.ok(p.isSolved());
+});

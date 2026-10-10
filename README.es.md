@@ -50,8 +50,13 @@ en un navegador. No hace falta compilar ni usar un servidor.
 - **Girar:** haz clic para girar el grupo 60° en el sentido de las agujas del
   reloj. Es el único movimiento. Para girar más, vuelve a hacer clic; con seis
   clics el grupo vuelve a su posición inicial.
+- **Girar el tablero:** el botón ↻ (o la tecla `R`) gira el tablero completo
+  60°, como girar el marco del puzzle físico. No cuenta como movimiento y se
+  puede ganar en cualquier orientación. Girado 60°, el cubo macizo se ve como
+  un rincón hueco.
 - **Táctil:** toca un grupo para seleccionarlo y vuelve a tocarlo para girarlo.
-- **Teclado:** las flechas mueven la selección y `E` o `Enter` gira.
+- **Teclado:** las flechas mueven la selección, `E` o `Enter` gira y `R` gira
+  el tablero.
 - **Deshacer / rehacer:** usa los botones con icono (al pasar el ratón se ve el
   atajo), o `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` en Mac).
 - **Idioma y tema:** arriba del panel lateral hay un selector de idioma
@@ -88,7 +93,13 @@ jugar en versiones de 2×2×2, 4×4×4 y 5×5×5; la de 3×3×3 es la original.
   Eso corrige la paridad sin cambiar el aspecto del tablero, y por eso
   cualquier disposición aleatoria tiene solución.
 - **Victoria:** el juego comprueba que el tablero tenga la forma del cubo
-  macizo y que las nueve fichas de cada cara compartan color, sea cual sea.
+  macizo, visto con el tablero en cualquier orientación, y que las nueve
+  fichas de cada cara compartan color, sea cual sea.
+- **Giro del tablero:** sólo cambia la vista, no el estado del puzzle. Girar
+  el hexágono 120° permuta los tres ejes de la pila, y girarlo 180° cambia la
+  pila por su complemento dentro de la caja (el cubo macizo pasa a ser el
+  rincón vacío). Los tests comprueban que estas formas coinciden con la
+  geometría de los rombos girada.
 - **Deshacer / rehacer:** cada movimiento se guarda como su punto central.
   Deshacer aplica un giro de −60° en ese mismo punto.
 

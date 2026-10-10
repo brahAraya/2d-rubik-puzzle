@@ -18,7 +18,7 @@
   const ui = {
     board: $('board'), moves: $('moves'), time: $('time'),
     status: $('status'), win: $('win'), winDetail: $('win-detail'), size: $('size'),
-    lang: $('lang'), theme: $('theme'), undo: $('undo'), redo: $('redo'),
+    lang: $('lang'), theme: $('theme'), undo: $('undo'), redo: $('redo'), spin: $('spin'),
   };
 
   // Atajos de teclado que se muestran en las ayudas emergentes (⌘ en Mac).
@@ -48,6 +48,8 @@
     ui.lang.value = ProppI18n.lang;
     ProppI18n.apply(document, KEYS);
     ui.undo.setAttribute('aria-label', t('undo'));
+    ui.spin.setAttribute('aria-label', t('spin'));
+    ui.spin.dataset.tip = t('spin') + ' · R';
     ui.undo.dataset.tip = t('undo') + ' · ' + KEYS.undo;
     ui.redo.setAttribute('aria-label', t('redo'));
     ui.redo.dataset.tip = t('redo') + ' · ' + KEYS.redo;
@@ -104,6 +106,8 @@
     duration: reduceMotion ? 0 : 280,
     toolTween: reduceMotion ? 0 : 160,
     onIdle: () => checkWin(),
+    // Girar el tablero no es un movimiento, pero la orientación se guarda.
+    onViewChange: () => save(),
   });
 
   let puzzle = null;
@@ -114,7 +118,8 @@
 
   /* ---------------- Partida ---------------- */
 
-  function newPuzzle(n, state) {
+  function newPuzzle(n, state, viewTurns = 0) {
+    view.setViewTurns(viewTurns);
     puzzle = state
       ? ProppPuzzle.deserialize(state)
       : new ProppPuzzle({ heights: solidCube(n), mode: 'color', allowedOps: [MOVE] });
@@ -223,6 +228,8 @@
     const hs = puzzle.hexagons;
     if (!hs.length) return;
     if (selectedHex() < 0) return selectHex(puzzle.nearestHexagon(0, 0));
+    // Las flechas son direcciones de pantalla: las pasamos al tablero sin girar.
+    [dx, dy] = ProppCore.rotatePoint([dx, dy], [0, 0], (-view.viewTurns * Math.PI) / 3);
     const c = hs[selectedHex()].center;
     let best = -1;
     let bestScore = Infinity;
@@ -297,15 +304,19 @@
     if (k === 'e' || (k === 'enter' && e.target === document.body)) {
       e.preventDefault();
       act();
+    } else if (k === 'r') {
+      view.rotateView();
     }
   });
 
+  ui.spin.addEventListener('click', () => view.rotateView());
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
   $('win-new').addEventListener('click', startRandom);
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
+    view.setViewTurns(0);
     view.sync();
     resetTimer();
   });
@@ -364,7 +375,7 @@
   /* ---------------- Persistencia ---------------- */
 
   function save() {
-    storageSet(STORAGE_KEY, JSON.stringify({ state: puzzle.serialize(), elapsed: timer.elapsed }));
+    storageSet(STORAGE_KEY, JSON.stringify({ state: puzzle.serialize(), elapsed: timer.elapsed, view: view.viewTurns }));
   }
 
   function load() {
@@ -373,7 +384,7 @@
       if (!raw) return false;
       const data = JSON.parse(raw);
       // deserialize valida la forma, la paridad y el historial guardados.
-      newPuzzle(0, data.state);
+      newPuzzle(0, data.state, Number.isInteger(data.view) ? data.view : 0);
       timer.elapsed = data.elapsed || 0;
       won = puzzle.isSolved() && puzzle.moveCount > 0;
       return true;
