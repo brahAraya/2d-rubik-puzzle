@@ -157,6 +157,25 @@
       // el fondo y el contorno del hexágono. La sombra se aplica con CSS a todo
       // el SVG, así que no cambia de dirección al girar.
       this.world = el('g', { class: 'world' }, svg);
+      // Resplandor dinámico: un SVG hermano, detrás del tablero y más grande
+      // (para que el desenfoque no se recorte), con una copia desenfocada y
+      // ampliada de las fichas. Comparte escala y centro con el tablero.
+      const GLOW_PAD = 1.7;
+      if (!this.glowSvg) {
+        this.glowSvg = document.createElementNS(SVG_NS, 'svg');
+        this.glowSvg.setAttribute('class', 'glow-svg');
+        this.glowSvg.setAttribute('aria-hidden', 'true');
+        svg.parentNode.insertBefore(this.glowSvg, svg);
+      }
+      const gs = this.glowSvg;
+      while (gs.firstChild) gs.removeChild(gs.firstChild);
+      const gr = r * GLOW_PAD;
+      gs.setAttribute('viewBox', [-gr, -gr, 2 * gr, 2 * gr].join(' '));
+      const gdefs = el('defs', {}, gs);
+      const blur = el('filter', { id: 'glow-blur', x: '-50%', y: '-50%', width: '200%', height: '200%' }, gdefs);
+      el('feGaussianBlur', { stdDeviation: (n * SCALE * 0.14).toFixed(1) }, blur);
+      this.glowWorld = el('g', {}, gs);
+      this.glowLayer = el('g', { class: 'glow', filter: 'url(#glow-blur)', transform: 'scale(1.1)' }, this.glowWorld);
       el('path', { d: pathFrom(outline), class: 'board-shadow' }, this.world);
       this.slotLayer = el('g', { class: 'slots' }, this.world);
       this.labelLayer = el('g', { class: 'labels' }, this.world);
@@ -170,6 +189,7 @@
 
       // La identidad de cada casilla es estable; su geometría cambia con los volteos.
       this.slotEls = puzzle.target.slots.map((s) => el('path', { class: 'slot orient-' + s.orient }, this.slotLayer));
+      this.glowEls = puzzle.target.slots.map(() => el('path', {}, this.glowLayer));
 
       // Numeración de las piezas que pueden moverse (modo numerado).
       this.pieceNumber = new Array(puzzle.slotCount).fill(0);
@@ -215,7 +235,8 @@
     _applyViewTransform(deg) {
       this.viewDeg = deg;
       const tf = deg % 360 === 0 ? null : `rotate(${deg} 0 0)`;
-      for (const g of [this.world, this.overLayer]) {
+      for (const g of [this.world, this.overLayer, this.glowWorld]) {
+        if (!g) continue;
         if (tf) g.setAttribute('transform', tf);
         else g.removeAttribute('transform');
       }
@@ -343,6 +364,7 @@
         tiling.slots.forEach((s) => {
           const path = this.slotEls[s.id];
           path.setAttribute('d', pathFrom(s.corners));
+          this.glowEls[s.id].setAttribute('d', pathFrom(s.corners));
           // Con volteo toda casilla acaba siendo móvil: no marcamos ninguna como fija.
           path.classList.toggle('fixed', !p.allowFlip && !movable.has(s.id));
           this.labelEls[s.id].setAttribute('x', (s.centroid[0] * SCALE).toFixed(2));
@@ -354,8 +376,10 @@
       tiling.slots.forEach((s) => {
         const piece = perm[s.id];
         const path = this.slotEls[s.id];
-        path.setAttribute('fill', this.fillFor(piece, LIGHT[this._vis(s.orient)]));
+        const fill = this.fillFor(piece, LIGHT[this._vis(s.orient)]);
+        path.setAttribute('fill', fill);
         path.classList.remove('hole');
+        this.glowEls[s.id].style.fill = fill;
         const label = this.labelEls[s.id];
         label.textContent = numbered && p.everMovable[piece] ? this.pieceNumber[piece] : '';
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
