@@ -15,7 +15,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <p class="vibe-banner" data-i18n="vibe"></p>
   <header class="top">
     <h1>Propp Lozenge</h1>
     <dl class="stats">
@@ -45,42 +44,45 @@
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
 
-    <aside class="panel">
-      <div class="group">
-        <button id="new" type="button" class="primary" data-i18n="new">Nuevo estado aleatorio</button>
-        <button id="undo" type="button" class="icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-        </button>
-        <button id="redo" type="button" class="icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
-        </button>
-      </div>
-      <button id="solve-reset" type="button" data-i18n="reset">Restablecer (resuelto)</button>
+    <div class="side">
+      <aside class="panel">
+        <div class="group">
+          <button id="new" type="button" class="primary" data-i18n="new">Nuevo estado aleatorio</button>
+          <button id="undo" type="button" class="icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          </button>
+          <button id="redo" type="button" class="icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+          </button>
+        </div>
+        <button id="solve-reset" type="button" data-i18n="reset">Restablecer (resuelto)</button>
 
-      <label><span data-i18n="size">Tamaño</span>
-        <select id="size">
-          <option value="2">2 × 2 × 2</option>
-          <option value="3" selected>3 × 3 × 3</option>
-          <option value="4">4 × 4 × 4</option>
-          <option value="5">5 × 5 × 5</option>
-        </select>
-      </label>
+        <label><span data-i18n="size">Tamaño</span>
+          <select id="size">
+            <option value="2">2 × 2 × 2</option>
+            <option value="3" selected>3 × 3 × 3</option>
+            <option value="4">4 × 4 × 4</option>
+            <option value="5">5 × 5 × 5</option>
+          </select>
+        </label>
 
-      <details class="help">
-        <summary data-i18n="help.title">Cómo se juega</summary>
-        <ul>
-          <li data-i18n="help.goal"></li>
-          <li data-i18n="help.select"></li>
-          <li data-i18n="help.colors"></li>
-          <li data-i18n="help.click"></li>
-          <li data-i18n="help.shape"></li>
-          <li data-i18n="help.touch"></li>
-          <li data-i18n="help.keys"></li>
-        </ul>
-      </details>
+        <details class="help">
+          <summary data-i18n="help.title">Cómo se juega</summary>
+          <ul>
+            <li data-i18n="help.goal"></li>
+            <li data-i18n="help.select"></li>
+            <li data-i18n="help.colors"></li>
+            <li data-i18n="help.click"></li>
+            <li data-i18n="help.shape"></li>
+            <li data-i18n="help.touch"></li>
+            <li data-i18n="help.keys"></li>
+          </ul>
+        </details>
 
-      <a class="buy" href="https://www.etsy.com/es/listing/4565297719/pastilla-de-propp" target="_blank" rel="noopener" data-i18n="buy">Compra el puzzle físico</a>
-    </aside>
+        <a class="buy" href="https://www.etsy.com/es/listing/4565297719/pastilla-de-propp" target="_blank" rel="noopener" data-i18n="buy">Compra el puzzle físico</a>
+      </aside>
+      <small class="vibe" data-i18n="vibe"></small>
+    </div>
   </main>
 
   <footer class="foot">

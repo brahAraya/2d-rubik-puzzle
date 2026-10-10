@@ -145,7 +145,7 @@ h1 { margin: 0; font-size: 1.25rem; letter-spacing: 0.02em; }
   text-align: center;
   color: var(--muted);
 }
-.status.warn:not(.quiet) { color: var(--bad); font-weight: 600; }
+.status.warn { color: var(--bad); font-weight: 600; }
 
 .win {
   position: absolute;
@@ -167,8 +167,9 @@ h1 { margin: 0; font-size: 1.25rem; letter-spacing: 0.02em; }
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
-  align-self: start;
 }
+
+.side { display: flex; flex-direction: column; gap: 10px; align-self: start; }
 
 .group { display: flex; gap: 8px; }
 .group.col { flex-direction: column; }
@@ -249,13 +250,5 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   color: var(--muted);
 }
 .foot p { margin: 4px 0; }
-/* Aviso de IA: lo primero que se ve, sin alarmismo. */
-.vibe-banner {
-  margin: 0;
-  padding: 8px 16px;
-  text-align: center;
-  font-size: 0.82rem;
-  color: var(--ink);
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
+/* Aviso de IA, debajo de la tarjeta de opciones. */
+.vibe { display: block; padding: 0 4px; font-size: 0.78rem; color: var(--muted); }

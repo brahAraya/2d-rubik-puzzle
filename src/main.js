@@ -199,17 +199,9 @@
 
   /* ---------------- Selección ---------------- */
 
-  function selectVertex(v, quiet) {
+  function selectVertex(v) {
     selectedKey = v ? v.key : null;
     view.setSelection(v ? { vertex: v, hex: v.hex } : null);
-    if (!v || quiet) return;
-    if (v.hex < 0) {
-      const n = v.slots.length;
-      say(n === 3 ? t('status.three') : t('status.many', { n }), true, true);
-    } else {
-      const h = puzzle.hexagons[v.hex];
-      say(t(h.kind === 'convexo' ? 'status.selected.convex' : 'status.selected.concave'), false, true);
-    }
   }
 
   function selectAt(x, y) {
@@ -222,7 +214,7 @@
   // Tras un volteo cambian los vértices: recolocamos la herramienta en el mismo punto.
   function refreshSelection() {
     if (selectedKey === null) return;
-    selectVertex(puzzle.tiling.vertices.find((v) => v.key === selectedKey) || null, true);
+    selectVertex(puzzle.tiling.vertices.find((v) => v.key === selectedKey) || null);
   }
 
   function selectHex(hexId) {
@@ -336,12 +328,11 @@
     $('redo').disabled = !puzzle.canRedo();
   }
 
-  function say(msg, warn = false, quiet = false) {
+  function say(msg, warn = false) {
     ui.status.textContent = msg;
     ui.status.classList.toggle('warn', warn);
-    ui.status.classList.toggle('quiet', quiet);
     clearTimeout(statusTimeout);
-    if (!quiet) statusTimeout = setTimeout(() => (ui.status.textContent = ''), 3500);
+    statusTimeout = setTimeout(() => (ui.status.textContent = ''), 3500);
   }
 
   setInterval(() => {

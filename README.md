@@ -1,6 +1,6 @@
 # Propp Lozenge
 
-> **🤖 Vibe coded.** This project was made with generative AI: an AI assistant
+> **Vibe coded.** This project was made with generative AI: an AI assistant
 > wrote the code.
 
 *[Español](README.es.md)*

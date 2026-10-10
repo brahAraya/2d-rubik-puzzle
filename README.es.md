@@ -1,6 +1,6 @@
 # Propp Lozenge
 
-> **🤖 Vibe coded.** Este proyecto se hizo con IA generativa: el código lo
+> **Vibe coded.** Este proyecto se hizo con IA generativa: el código lo
 > escribió un asistente de IA.
 
 *[English](README.md)*
