@@ -500,7 +500,8 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   align-items: center;
   margin: 0;
 }
-.help-keys dt { display: flex; gap: 3px; white-space: nowrap; }
+.help-keys dt { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.kbd-or { margin: 0 2px; color: var(--muted); font-size: 0.8rem; }
 .help-keys dd { margin: 0; color: var(--muted); line-height: 1.35; }
 kbd {
   display: inline-block;
