@@ -209,10 +209,11 @@ button.with-icon svg {
  */
 @media (min-width: 761px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 350px;
+    /* Panel lateral: 350 px como mínimo; crece con la ventana hasta 460 px. */
+    grid-template-columns: minmax(0, 1fr) minmax(350px, min(28vw, 460px));
     height: 100vh;
     height: 100dvh;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
   }
   .board-wrap { min-height: 0; }
