@@ -375,7 +375,18 @@
   const help = document.querySelector('.help');
   const helpBody = help.querySelector('.help-body');
   let helpAnim = null;
+  // En escritorio las instrucciones van fijas y siempre abiertas en la barra.
+  const desktopQuery = window.matchMedia('(min-width: 761px)');
+  function syncHelpPin() {
+    const pinned = desktopQuery.matches;
+    help.classList.toggle('pinned', pinned);
+    if (pinned) help.open = true;
+  }
+  syncHelpPin();
+  if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', syncHelpPin);
+
   help.querySelector('summary').addEventListener('click', (e) => {
+    if (help.classList.contains('pinned')) return e.preventDefault();
     if (reduceMotion || !helpBody.animate) return;
     e.preventDefault();
     if (helpAnim) helpAnim.cancel();
