@@ -150,7 +150,7 @@
   function resetTimer() {
     timer = { start: 0, elapsed: 0, running: false };
     won = false;
-    ui.win.hidden = true;
+    setLocked(false);
     updateHud();
   }
 
@@ -161,6 +161,7 @@
   }
 
   function act() {
+    if (isLocked()) return false;
     const res = puzzle.move(selectedHex(), MOVE);
     if (!res.ok) {
       blocked();
@@ -175,12 +176,14 @@
   }
 
   function undo() {
+    if (isLocked()) return;
     const tr = puzzle.undo();
     if (!tr) return say(t('status.noUndo'));
     view.enqueue(tr);
   }
 
   function redo() {
+    if (isLocked()) return;
     const tr = puzzle.redo();
     if (!tr) return say(t('status.noRedo'));
     view.enqueue(tr);
@@ -197,9 +200,30 @@
     timer.elapsed = performance.now() - timer.start;
     timer.running = false;
     showWinDetail();
-    ui.win.hidden = false;
+    setLocked(true);
     updateHud();
   }
+
+  // Con la ventana de victoria abierta el juego queda bloqueado: el resto de
+  // la página es inerte (sin clics ni foco) y se ignoran los atajos.
+  const layout = document.querySelector('.layout');
+  function setLocked(locked) {
+    ui.win.hidden = !locked;
+    layout.inert = locked;
+    if (locked) $('win-new').focus();
+  }
+
+  function isLocked() {
+    return !ui.win.hidden;
+  }
+
+  // Un clic en el fondo oscuro devuelve el foco al botón.
+  ui.win.addEventListener('mousedown', (e) => {
+    if (e.target === ui.win) {
+      e.preventDefault();
+      $('win-new').focus();
+    }
+  });
 
   function showWinDetail() {
     ui.winDetail.textContent = t('win.detail', { moves: puzzle.moveCount, time: fmtTime(timer.elapsed) });
@@ -294,6 +318,15 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (isLocked()) {
+      // Bloqueado: sólo cuenta «Jugar otra vez». Enter lo activa aunque el foco
+      // se haya ido del botón (por ejemplo, tras un clic en el fondo).
+      if (e.key === 'Enter' && e.target !== $('win-new')) {
+        e.preventDefault();
+        $('win-new').click();
+      }
+      return;
+    }
     if (e.target.closest && e.target.closest('select')) return;
     const k = e.key.toLowerCase();
     const mod = e.ctrlKey || e.metaKey;

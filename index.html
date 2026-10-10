@@ -21,11 +21,6 @@
   <main class="layout">
     <section class="board-wrap">
       <svg id="board" role="img" aria-label="Tablero de rombos" data-i18n-attr="aria-label:board.label"></svg>
-      <div id="win" class="win" hidden>
-        <p class="win-title" data-i18n="win.title">¡Resuelto!</p>
-        <p id="win-detail"></p>
-        <button id="win-new" type="button" data-i18n="win.again">Jugar otra vez</button>
-      </div>
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
 
@@ -128,6 +123,15 @@
       </small>
     </div>
   </main>
+
+  <!-- Victoria: ventana modal que bloquea el juego hasta pulsar «Jugar otra vez». -->
+  <div id="win" class="win-overlay" hidden>
+    <div class="win" role="dialog" aria-modal="true" aria-labelledby="win-title">
+      <p class="win-title" id="win-title" data-i18n="win.title">¡Resuelto!</p>
+      <p id="win-detail"></p>
+      <button id="win-new" type="button" class="primary" data-i18n="win.again">Jugar otra vez</button>
+    </div>
+  </div>
 
   <script src="src/i18n.js"></script>
   <script src="src/core.js"></script>

@@ -362,10 +362,23 @@ button.with-icon svg {
   color: var(--muted);
 }
 
+.win-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: win-fade 0.2s ease-out;
+}
+.win-overlay[hidden] { display: none; }
+@keyframes win-fade { from { opacity: 0; } }
 .win {
-  position: absolute;
-  inset: 35% 15% auto;
-  padding: 18px;
+  min-width: min(320px, 100%);
+  padding: 22px 26px;
   text-align: center;
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
   border: 2px solid var(--ok);
@@ -461,30 +474,29 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
   padding: 6px 0;
   cursor: pointer;
   list-style: none;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
   transition: color 0.18s ease;
 }
-.help-section summary:hover { color: var(--ink); }
+.help-section summary:hover { color: var(--accent); }
 .help-section summary::-webkit-details-marker { display: none; }
 .help-section summary::before {
   content: "";
   width: 0;
   height: 0;
-  border-left: 5px solid currentColor;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
+  border-left: 6px solid currentColor;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
   transition: transform 0.25s ease;
 }
 .help-section[open]:not(.closing) summary::before { transform: rotate(90deg); }
 .help-body { overflow: hidden; }
 .help-body > :first-child { margin-top: 6px; }
 .help-body > :last-child { margin-bottom: 8px; }
-/* Objetivo: texto del panel (sin tarjeta) bajo el título, con los tres colores. */
+/* Objetivo: texto del panel (sin tarjeta) bajo el tamaño, con los tres colores. */
 .help-goal {
+  margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 10px;
