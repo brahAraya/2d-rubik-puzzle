@@ -113,8 +113,8 @@ descripción del puzzle físico (hay un test que lo comprueba con 200
 colocaciones). El motor tiene además un modo «numerado», en el que cada ficha
 debe volver a su casilla exacta y la mitad de las colocaciones serían
 imposibles; el juego no lo usa. `setState()` y la
-carga desde `localStorage` rechazan los estados imposibles, y la cabecera
-muestra la paridad en todo momento.
+carga desde `localStorage` rechazan los estados imposibles, así que en el juego
+nunca aparece un estado sin solución.
 
 ### Deshacer / rehacer
 

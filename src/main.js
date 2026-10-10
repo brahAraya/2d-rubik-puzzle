@@ -16,7 +16,7 @@
 
   const $ = (id) => document.getElementById(id);
   const ui = {
-    board: $('board'), moves: $('moves'), time: $('time'), parity: $('parity'),
+    board: $('board'), moves: $('moves'), time: $('time'),
     status: $('status'), win: $('win'), winDetail: $('win-detail'), size: $('size'),
     lang: $('lang'), theme: $('theme'), undo: $('undo'), redo: $('redo'),
   };
@@ -332,9 +332,6 @@
 
   function updateHud() {
     ui.moves.textContent = puzzle.moveCount;
-    const a = puzzle.analyze();
-    ui.parity.textContent = a.solvable ? t('parity.even') : t('parity.bad');
-    ui.parity.classList.toggle('bad', !a.solvable);
     $('undo').disabled = !puzzle.canUndo();
     $('redo').disabled = !puzzle.canRedo();
   }

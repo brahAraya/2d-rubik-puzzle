@@ -78,7 +78,6 @@ h1 { margin: 0; font-size: 1.25rem; letter-spacing: 0.02em; }
 .stats div { display: flex; flex-direction: column; align-items: flex-end; }
 .stats dt { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
 .stats dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
-.stats dd.bad { color: var(--bad); }
 
 .layout {
   display: grid;
