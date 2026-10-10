@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propp Lozenge</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Propp Lozenge</h1>
+    <dl class="stats">
+      <div><dt>Movimientos</dt><dd id="moves">0</dd></div>
+      <div><dt>Tiempo</dt><dd id="time">0:00</dd></div>
+      <div><dt>Progreso</dt><dd id="progress">100%</dd></div>
+      <div><dt>Paridad</dt><dd id="parity" title="Todos los giros son 3-ciclos: la permutación de cada zona debe ser par">par ✓</dd></div>
+    </dl>
+  </header>
+
+  <main class="layout">
+    <section class="board-wrap">
+      <svg id="board" role="img" aria-label="Tablero de rombos"></svg>
+      <div id="win" class="win" hidden>
+        <p class="win-title">¡Resuelto!</p>
+        <p id="win-detail"></p>
+        <button id="win-new" type="button">Jugar otra vez</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <aside class="panel">
+      <div class="group">
+        <button id="rot-cw" type="button" title="Girar 120° (clic · E · Enter)">↻ 120°</button>
+        <button id="rot-ccw" type="button" title="Girar 240° (Mayús+clic · clic derecho · Q)">↺ 240°</button>
+      </div>
+      <div class="group">
+        <button id="undo" type="button" title="Deshacer (Ctrl+Z)">⟲ Deshacer</button>
+        <button id="redo" type="button" title="Rehacer (Ctrl+Y · Ctrl+Mayús+Z)">⟳ Rehacer</button>
+      </div>
+
+      <div class="group col">
+        <button id="new" type="button" class="primary">Nuevo estado aleatorio</button>
+        <button id="scramble" type="button">Mezclar con 30 giros</button>
+        <button id="solve-reset" type="button">Restablecer (resuelto)</button>
+      </div>
+
+      <label>Tamaño
+        <select id="size">
+          <option value="2">2 × 2 × 2</option>
+          <option value="3" selected>3 × 3 × 3</option>
+          <option value="4">4 × 4 × 4</option>
+          <option value="5">5 × 5 × 5</option>
+        </select>
+      </label>
+      <label>Disposición
+        <select id="preset"></select>
+      </label>
+      <label>Objetivo
+        <select id="mode">
+          <option value="color">Colores (cada cara de un color)</option>
+          <option value="numerado">Numerado (cada pieza en su sitio)</option>
+        </select>
+      </label>
+
+      <p id="info" class="info"></p>
+
+      <details class="help">
+        <summary>Cómo se juega</summary>
+        <ul>
+          <li>Mueve el puntero: la herramienta de 3 piezas se ajusta al punto de convergencia más cercano.</li>
+          <li>Verde: tres rombos forman un cubito y se pueden girar. Rojo: giro bloqueado.</li>
+          <li>Clic = 120° horario. Mayús+clic o clic derecho = 240°.</li>
+          <li>Táctil: toca para seleccionar y vuelve a tocar para girar.</li>
+          <li>Teclado: flechas para mover la selección, E/Enter = 120°, Q = 240°, Ctrl+Z / Ctrl+Y.</li>
+          <li>Objetivo: caras superiores blancas, izquierdas verdes y derechas rojas.</li>
+        </ul>
+      </details>
+    </aside>
+  </main>
+
+  <script src="src/core.js"></script>
+  <script src="src/presets.js"></script>
+  <script src="src/renderer.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

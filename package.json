@@ -1,0 +1,11 @@
+{
+  "name": "propp-lozenge",
+  "version": "1.0.0",
+  "description": "Motor de juego del puzzle Propp Lozenge (rombos isométricos con giros de 120°/240°)",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "explore": "node scripts/explore.js"
+  }
+}
