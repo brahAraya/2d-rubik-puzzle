@@ -92,24 +92,47 @@ body {
 }
 
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
+h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; white-space: nowrap; }
 
 .prefs { display: flex; gap: 6px; align-items: center; }
-.prefs .lang { padding: 6px 8px 6px 30px; }
-/* Selector de idioma con icono de globo dentro del campo. */
-.lang-wrap { position: relative; display: inline-flex; flex-direction: row; align-items: center; font-size: inherit; }
-.lang-wrap svg {
-  position: absolute;
-  left: 9px;
+/* Selector de idioma: control segmentado ES | EN con icono de globo. */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.lang-switch svg {
   width: 16px;
   height: 16px;
+  margin: 0 3px 0 4px;
   fill: none;
-  stroke: currentColor;
+  stroke: var(--muted);
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+.lang-switch button {
+  height: 100%;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--muted);
-  pointer-events: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.lang-switch button:hover:not(:disabled):not([aria-pressed="true"]) { background: transparent; box-shadow: none; color: var(--ink); }
+.lang-switch button[aria-pressed="true"],
+.lang-switch button[aria-pressed="true"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 24%, var(--panel));
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 .prefs button.icon { height: 36px; width: 38px; }
 /* La ayuda del botón de tema se abre hacia abajo y alineada a la derecha. */

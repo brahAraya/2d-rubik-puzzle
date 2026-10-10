@@ -45,7 +45,9 @@
 
   function setLanguage(lang) {
     ProppI18n.setLang(lang);
-    ui.lang.value = ProppI18n.lang;
+    ui.lang.querySelectorAll('[data-lang]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.lang === ProppI18n.lang));
+    });
     ProppI18n.apply(document, KEYS);
     ui.undo.setAttribute('aria-label', t('undo'));
     ui.spin.dataset.tip = t('spin') + ' · R';
@@ -60,9 +62,11 @@
     ui.status.textContent = '';
   }
 
-  ui.lang.addEventListener('change', () => {
-    storageSet(LANG_KEY, ui.lang.value);
-    setLanguage(ui.lang.value);
+  ui.lang.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]');
+    if (!b || b.dataset.lang === ProppI18n.lang) return;
+    storageSet(LANG_KEY, b.dataset.lang);
+    setLanguage(b.dataset.lang);
   });
 
   /* ---------------- Tema claro / oscuro ---------------- */
