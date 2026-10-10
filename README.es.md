@@ -5,158 +5,110 @@
 
 *[English](README.md)*
 
-🛒 **Compra el puzzle físico:** [Propp Lozenge en Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+Una versión para navegador de **Propp Lozenge**, un puzzle plano que parece un
+cubo en 3D. Está escrito en HTML, CSS y JavaScript vanilla, sin dependencias.
 
-Motor de juego en HTML/CSS/JavaScript vanilla que reproduce el puzzle
-**Propp Lozenge** (inventado por James Propp y diseñado por Oskar van Deventer):
-27 fichas en forma de rombo dentro de un marco hexagonal que crean la ilusión de
-un cubo 3D. Con una herramienta magnética se levanta un grupo hexagonal de tres
-fichas, se gira 60° y se vuelve a colocar. El objetivo es restaurar el cubo
-original.
+🛒 **Compra el puzzle físico:** [Propp Lozenge en Etsy](https://www.etsy.com/listing/4565297719/pastilla-de-propp)
 
-## Cómo ejecutarlo
+## El puzzle
 
-Abre `index.html` en el navegador. No hace falta compilar ni servidor: los
-scripts son clásicos (no módulos ES), así que también funcionan desde `file://`.
+Propp Lozenge es un puzzle de fichas magnéticas inventado por **James (Jim)
+Propp** y diseñado por **Oskar van Deventer**.
+
+Tiene 27 fichas en forma de rombo dispuestas dentro de un marco hexagonal. Sus
+colores y orientaciones crean la ilusión de un cubo tridimensional, aunque el
+puzzle es completamente plano.
+
+Cada ficha lleva un pequeño imán incrustado. Con la herramienta magnética se
+levanta un grupo hexagonal de tres fichas, se gira 60° y se vuelve a colocar en
+el marco. Estos giros transforman poco a poco el patrón y permiten desordenar
+el puzzle. Al girar un grupo, un cubo que sobresale se convierte en un rincón
+hueco y viceversa, así que la imagen va pasando por muchos patrones de rombos
+conocidos que parecen cubos a los que les faltan partes.
+
+El objetivo es sencillo: restaurar el patrón original del cubo.
+
+A diferencia de muchos puzzles de permutación, una disposición completamente
+aleatoria de Propp Lozenge siempre tiene solución. Por mucho que lo desordenes,
+siempre hay una manera de volver atrás.
+
+## Cómo se juega
+
+**▶ Juega online: [braharaya.github.io/2d-rubik-puzzle](https://braharaya.github.io/2d-rubik-puzzle/)**
+
+También puedes jugar sin conexión: descarga el repositorio y abre `index.html`
+en un navegador. No hace falta compilar ni usar un servidor.
+
+- **Objetivo:** reconstruir el cubo macizo con las caras superiores amarillas,
+  las izquierdas verdes y las derechas rojas.
+- **Seleccionar:** mueve el puntero sobre el tablero. La herramienta de tres
+  fichas se ajusta al punto más cercano donde se juntan tres fichas. Verde
+  significa que las tres fichas forman un grupo válido y se pueden girar. Rojo
+  significa que el giro está bloqueado en ese punto.
+- **Girar:** haz clic para girar el grupo 60° en el sentido de las agujas del
+  reloj. Es el único movimiento. Para girar más, vuelve a hacer clic; con seis
+  clics el grupo vuelve a su posición inicial.
+- **Táctil:** toca un grupo para seleccionarlo y vuelve a tocarlo para girarlo.
+- **Teclado:** las flechas mueven la selección y `E` o `Enter` gira.
+- **Deshacer / rehacer:** usa los botones con icono (al pasar el ratón se ve el
+  atajo), o `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` en Mac).
+- **Idioma y tema:** en la cabecera hay un selector de idioma (español o
+  inglés) y un botón de modo claro/oscuro. Las dos opciones se recuerdan. En la
+  primera visita el juego usa el idioma del navegador y el tema del sistema.
+
+Cada partida nueva empieza desde una disposición aleatoria, como si sacaras
+todas las fichas del marco y las volvieras a colocar al azar. La partida se
+guarda en el navegador, incluido el historial de movimientos. También se puede
+jugar en versiones de 2×2×2, 4×4×4 y 5×5×5; la de 3×3×3 es la original.
+
+## Cómo funciona
+
+- **Tablero:** cada teselación del hexágono con rombos es la proyección de una
+  pila de cubitos dentro de una caja N×N×N (una partición plana). El motor
+  guarda la pila actual como un mapa de alturas y deduce de él las 3N² fichas.
+- **Grupos girables:** un grupo es un punto de la rejilla donde se juntan
+  exactamente tres fichas, cada una con su esquina de 120° en ese punto. Antes
+  de cada movimiento el motor comprueba que haya tres fichas distintas, una de
+  cada orientación, que compartan arista dos a dos y que ninguna cuarta ficha
+  toque ese punto.
+- **El giro de 60°:** girar un grupo 60° lo cambia a la otra teselación del
+  mismo hexágono, así que la pila gana o pierde un cubo. Cada ficha cae
+  exactamente en su posición girada 60°; los tests lo comprueban
+  geométricamente.
+- **Solubilidad:** toda secuencia de movimientos produce una permutación par
+  de las fichas. Los grupos de todas las pilas posibles enlazan las 27
+  posiciones, así que siempre se puede alcanzar una permutación par. Cuando una
+  disposición aleatoria sale impar, se intercambian dos fichas del mismo color.
+  Eso corrige la paridad sin cambiar el aspecto del tablero, y por eso
+  cualquier disposición aleatoria tiene solución.
+- **Deshacer / rehacer:** cada movimiento se guarda como su punto central.
+  Deshacer aplica un giro de −60° en ese mismo punto.
+
+Para ejecutar los tests del motor (Node.js 18 o posterior, sin dependencias):
 
 ```bash
-npm test          # 30 tests del motor (node:test, sin dependencias)
-npm run explore   # búsqueda de la mejor disposición inicial (opcional: N)
+npm test
 ```
 
-## Por qué vanilla
-
-No hay nada que justifique una dependencia externa:
-
-- **SVG** dibuja los rombos como polígonos nítidos a cualquier escala, con
-  detección de puntero y estilos CSS. Para unas decenas de piezas no hace falta
-  Canvas ni WebGL.
-- Las animaciones son `requestAnimationFrame` con una transformación `rotate`.
-- Los tests usan `node:test`, incluido en Node ≥ 18.
-
-## Modelo
-
-### Tablero
-
-El tablero es un hexágono de lado N sobre la rejilla triangular. Toda
-teselación de ese hexágono con rombos es la proyección isométrica de una pila
-de cubitos dentro de una caja N×N×N (biyección entre teselaciones por rombos y
-particiones planas, estudiada por James Propp). Por eso cada disposición se
-define con una **matriz de alturas** `h[i][j]` y el motor deduce de ella los 3N²
-rombos (`src/core.js → buildTiling`).
-
-Cada rombo es una **casilla** con una de tres orientaciones: cara superior,
-izquierda o derecha. Las **piezas** se mueven por las casillas. El sombreado
-depende de la orientación de la casilla, no de la pieza, así que la ilusión 3D
-se mantiene aunque el tablero esté desordenado.
-
-### La herramienta de 3 piezas
-
-Un cubito girable es un vértice de la rejilla en el que convergen exactamente
-tres rombos, cada uno con su ángulo de 120° en ese punto. Juntos forman un
-hexágono regular: la esquina visible de un cubito (convexo) o un rincón
-(cóncavo).
-
-- Al mover el puntero, la herramienta se ajusta al **punto de convergencia más
-  cercano**. Si allí hay un cubito válido se resalta en verde. Si no (por ejemplo
-  convergen 4 o 6 rombos), se muestra en rojo y el giro queda bloqueado.
-- Antes de cada giro, `validateMove` → `validateTriple` comprueba que haya tres
-  rombos distintos, uno de cada orientación, adyacentes dos a dos (comparten
-  arista) y con el ángulo obtuso en el vértice común, y que no haya un cuarto
-  rombo en ese punto.
-
-### El giro de 60°
-
-El **único movimiento** es girar el grupo 60° en sentido horario. Para girar
-más, se vuelve a girar: seis giros completan la vuelta.
-
-Un giro de 60° convierte el hexágono en su otra teselación: un cubito que
-sobresale pasa a ser un rincón y viceversa. Así cambia la forma de la pila y
-aparecen cubitos girables nuevos. La animación rota las tres fichas e
-interpola su sombreado mientras pasan de una cara a otra.
-
-Cada casilla tiene una identidad estable aunque cambie la forma (la cara
-superior de la columna (i, j), la cara +x de la fila (j, k) y la cara +y de la
-fila (i, k)). Internamente, 60° = 180° + 240°: media vuelta deja cada ficha en
-la nueva posición de su misma casilla, y los 240° restantes son un 3-ciclo. Los
-tests verifican geométricamente que cada ficha acaba en la posición girada
-exactamente 60° y con la orientación correcta.
-
-El motor admite también −60°, 120°, 180° y 240° (`allowedOps`), pero la
-partida sólo permite +60°. Deshacer aplica internamente el giro de −60°.
-
-### Objetivo
-
-Recuperar el cubo macizo original (3×3×3, 27 fichas) con todas las caras
-superiores amarillas, las izquierdas verdes y las derechas rojas. También se
-puede jugar con tamaños de 2 a 5.
-
-### Estado aleatorio y paridad
-
-Como en el puzzle físico, el estado inicial equivale a sacar todas las fichas
-y colocarlas al azar: una forma aleatoria (un paseo aleatorio de giros) con una
-colocación aleatoria de las fichas.
-
-Los giros de 120° son 3-ciclos (permutaciones **pares**) y la media vuelta no
-permuta fichas, así que toda secuencia de giros produce una permutación par.
-Los 3-ciclos de una zona conexa generan exactamente el grupo alternado sobre
-ella, y los cubitos de todas las formas posibles enlazan las 27 casillas (los
-tests lo comprueban de forma exhaustiva para N ≤ 3). Por tanto un estado es
-alcanzable si y sólo si la forma es una partición plana válida, las fichas son
-una permutación y esa permutación es par.
-
-Si la colocación aleatoria sale impar, `fixParity()`
-intercambia dos fichas del **mismo color** y el tablero se ve igual. Por eso
-**cualquier colocación aleatoria de las fichas tiene solución**, como dice la
-descripción del puzzle físico (hay un test que lo comprueba con 200
-colocaciones). El motor tiene además un modo «numerado», en el que cada ficha
-debe volver a su casilla exacta y la mitad de las colocaciones serían
-imposibles; el juego no lo usa. `setState()` y la
-carga desde `localStorage` rechazan los estados imposibles, así que en el juego
-nunca aparece un estado sin solución.
-
-### Deshacer / rehacer
-
-El motor guarda una pila de movimientos `{key, op}`, donde `key` es el vértice
-central y `op` es `cw60`. Deshacer aplica el giro contrario (−60°) en el
-mismo vértice y lo pasa a la pila de rehacer. Un giro nuevo vacía la pila de
-rehacer. Los giros se animan en cola, así que pulsar Ctrl+Z varias veces
-seguidas se reproduce en orden. La partida (con su historial) se guarda en
-`localStorage`.
-
-## Controles
-
-| Acción | Ratón | Táctil | Teclado |
-| --- | --- | --- | --- |
-| Seleccionar cubito | mover el puntero | tocar | flechas |
-| Girar 60° (horario) | clic | volver a tocar | `E` / `Enter` |
-| Deshacer / rehacer | iconos ⟲ ⟳ | iconos ⟲ ⟳ | `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` en Mac) |
-
-En la cabecera se elige el idioma (español o inglés) y el modo claro u oscuro.
-Las dos opciones se recuerdan; en la primera visita se usan el idioma del
-navegador y el tema del sistema. Los textos están en `src/i18n.js` y el motor
-devuelve un `code` estable en cada movimiento bloqueado para poder traducir el
-motivo.
-
-## Estructura
+## Estructura del proyecto
 
 ```
-index.html          interfaz
-styles.css          estilos (tema claro/oscuro)
+index.html          página
+styles.css          estilos (temas claro y oscuro)
 src/i18n.js         textos en español e inglés
-src/core.js         motor: teselación, validación, giros, paridad, historial (sin DOM)
-src/presets.js      formas del tablero (cubo macizo; las demás, para tests)
+src/core.js         motor: teselación, validación, movimientos, paridad, historial (sin DOM)
+src/presets.js      formas del tablero (el cubo macizo; las demás formas son para los tests)
 src/renderer.js     vista SVG, herramienta de selección y animaciones
-src/main.js         controlador: eventos, HUD, persistencia
+src/main.js         controlador de la interfaz: entrada, marcador, guardado
 tests/core.test.js  tests del motor
-scripts/explore.js  búsqueda de la disposición con más piezas móviles
+scripts/explore.js  búsqueda de las teselaciones con más grupos girables
 ```
 
 ## Créditos
 
 - **Puzzle inventado por:** James (Jim) Propp
 - **Puzzle diseñado por:** Oskar van Deventer
-- **Puzzle físico:** [a la venta en Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+- **Puzzle físico:** [a la venta en Etsy](https://www.etsy.com/listing/4565297719/pastilla-de-propp)
 
 Este proyecto es una versión digital no oficial, hecha por aficionados para
 aprender y disfrutar. No tiene relación con el inventor ni con el diseñador del
