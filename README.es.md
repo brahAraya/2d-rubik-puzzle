@@ -40,9 +40,9 @@ También puedes jugar sin conexión: descarga el repositorio y abre `index.html`
 en un navegador. No hace falta compilar ni usar un servidor.
 
 - **Objetivo:** reconstruir el cubo macizo con cada una de sus tres caras de
-  un solo color. Cualquier reparto vale: el verde puede acabar arriba, a la
-  izquierda o a la derecha, siempre que cada cara sea uniforme. Los seis
-  repartos posibles se pueden alcanzar.
+  un solo color. No importa qué color quede en cada cara: el verde puede
+  acabar arriba, a la izquierda o a la derecha, siempre que cada cara sea
+  uniforme. Las seis combinaciones posibles se pueden alcanzar.
 - **Seleccionar:** mueve el puntero sobre el tablero. La herramienta de tres
   fichas se ajusta al punto más cercano donde se juntan tres fichas. Verde
   significa que las tres fichas forman un grupo válido y se pueden girar. Rojo

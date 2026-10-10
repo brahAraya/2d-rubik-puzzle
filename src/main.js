@@ -145,7 +145,6 @@
     puzzle.randomize();
     view.showState();
     resetTimer();
-    say(t('status.random'));
   }
 
   function resetTimer() {
@@ -374,29 +373,41 @@
   // <details> no anima su apertura: animamos la altura del contenido a mano.
   // Secciones desplegables de las instrucciones («Cómo jugar» y «Atajos»).
   // <details> no anima su apertura: animamos la altura del contenido a mano.
-  // Al cargar la página empiezan siempre plegadas (no se guarda su estado).
-  document.querySelectorAll('.help-section').forEach((section) => {
+  // Funcionan como acordeón (abrir una pliega las demás) y al cargar la
+  // página empiezan siempre plegadas.
+  const sections = [...document.querySelectorAll('.help-section')];
+
+  function setSection(section, open) {
+    if (section.open === open && !section.classList.contains('closing')) return;
     const body = section.querySelector('.help-body');
-    let anim = null;
+    if (section._anim) section._anim.cancel();
+    if (reduceMotion || !body.animate) {
+      section.open = open;
+      return;
+    }
+    const startHeight = open ? 0 : body.offsetHeight;
+    section.open = true;
+    const endHeight = open ? body.scrollHeight : 0;
+    section.classList.toggle('closing', !open);
+    const anim = body.animate(
+      [{ height: startHeight + 'px', opacity: open ? 0 : 1 }, { height: endHeight + 'px', opacity: open ? 1 : 0 }],
+      { duration: 240, easing: 'ease' }
+    );
+    section._anim = anim;
+    anim.onfinish = () => {
+      section._anim = null;
+      section.classList.remove('closing');
+      if (!open) section.open = false;
+    };
+  }
+
+  sections.forEach((section) => {
     section.open = false;
     section.querySelector('summary').addEventListener('click', (e) => {
-      if (reduceMotion || !body.animate) return;
       e.preventDefault();
-      if (anim) anim.cancel();
-      const opening = !section.open;
-      const startHeight = opening ? 0 : body.offsetHeight;
-      section.open = true;
-      const endHeight = opening ? body.scrollHeight : 0;
-      section.classList.toggle('closing', !opening);
-      anim = body.animate(
-        [{ height: startHeight + 'px', opacity: opening ? 0 : 1 }, { height: endHeight + 'px', opacity: opening ? 1 : 0 }],
-        { duration: 240, easing: 'ease' }
-      );
-      anim.onfinish = () => {
-        anim = null;
-        section.classList.remove('closing');
-        if (!opening) section.open = false;
-      };
+      const opening = !section.open || section.classList.contains('closing');
+      if (opening) sections.forEach((other) => other !== section && setSection(other, false));
+      setSection(section, opening);
     });
   });
 
