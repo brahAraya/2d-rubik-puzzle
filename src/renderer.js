@@ -213,8 +213,10 @@
 
       this.selKey = null;
       this.toolState = null;
+      this.glowReady = false;
       this.display = this._current();
       this.refreshTheme();
+      this.glowReady = true;
       this._drawTool(null);
     }
 
@@ -388,11 +390,13 @@
         label.textContent = numbered && p.everMovable[piece] ? this.pieceNumber[piece] : '';
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
       });
-      // Posiciones que ya no existen en la forma actual.
+      // Posiciones que ya no existen en la forma actual (un giro de 60° cambia
+      // la forma del hexágono): se desvanecen mientras aparecen las nuevas.
       this.glowByPos.forEach((path, pos) => {
         if (!glowSeen.has(pos)) {
-          path.remove();
           this.glowByPos.delete(pos);
+          path.style.opacity = '0';
+          setTimeout(() => path.remove(), 700);
         }
       });
     }
@@ -405,6 +409,11 @@
         path = el('path', { d: pathFrom(s.corners) }, this.glowLayer);
         path.dataset.pos = pos;
         this.glowByPos.set(pos, path);
+        // Aparece con un fundido (salvo al montar el tablero).
+        if (this.glowReady) {
+          path.style.opacity = '0';
+          requestAnimationFrame(() => requestAnimationFrame(() => (path.style.opacity = '1')));
+        }
       }
       return path;
     }

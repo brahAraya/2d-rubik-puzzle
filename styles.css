@@ -277,7 +277,7 @@ button.with-icon svg {
 }
 /* Todo lo demás queda por encima del resplandor. */
 #board, .side, .panel-head, .panel-main, .side > .note, .status { position: relative; z-index: 1; }
-.glow path { transition: fill 0.6s ease; }
+.glow path { transition: fill 0.6s ease, opacity 0.6s ease; }
 :root[data-theme="dark"] .glow-svg { display: block; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .glow-svg { display: block; }
@@ -416,14 +416,16 @@ button.with-icon svg {
 .tool-hex {
   fill: color-mix(in srgb, var(--tool) 13%, transparent);
   stroke: var(--tool);
-  stroke-width: 4;
+  /* Al menos tan grueso como el borde exterior del tablero (6): si no, en los
+     cubitos del borde asoma una franja negra entre la selección y las fichas. */
+  stroke-width: 6;
   stroke-linejoin: round;
 }
 .tool-arms { stroke: var(--tool); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
 .tool-dot { fill: var(--tool); stroke: #fff; stroke-width: 2; }
 .tool-arrow { fill: none; stroke: #fff; stroke-width: 3.5; stroke-linecap: round; }
 .tool-arrowhead { fill: #fff; }
-.tool.blocked .tool-hex { stroke-dasharray: 6 5; stroke-width: 3; }
+.tool.blocked .tool-hex { stroke-dasharray: 8 6; stroke-width: 4; }
 .tool.shake { animation: shake 0.3s; }
 
 @keyframes shake {
