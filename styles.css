@@ -46,7 +46,7 @@
     --active-bg: #102542;
     --hole: #0c0d0f;
     --on-accent: #ffffff;
-    --sel-ok: #55dbcb;
+    --sel-ok: #73d2de;
     --sel-bad: #a9aeb7;
     --outline: #151515;
     --edge: #151515;
@@ -74,7 +74,7 @@
   --active-bg: #102542;
   --hole: #0c0d0f;
   --on-accent: #ffffff;
-  --sel-ok: #55dbcb;
+  --sel-ok: #73d2de;
   --sel-bad: #a9aeb7;
   --outline: #151515;
   --edge: #151515;
@@ -459,7 +459,9 @@ button:hover:not(:disabled) {
 button:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
 button:disabled { opacity: 0.45; cursor: default; }
 button.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) border-box;
+  /* El degradado cubre también el borde (transparente): si no, se repite
+     bajo él y aparece una franja clara en el lado izquierdo. */
   border-color: transparent;
   color: var(--on-accent);
 }
