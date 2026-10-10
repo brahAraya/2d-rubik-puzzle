@@ -50,7 +50,6 @@
     });
     ProppI18n.apply(document, KEYS);
     ui.undo.setAttribute('aria-label', t('undo'));
-    ui.spin.dataset.tip = t('spin') + ' · R';
     ui.undo.dataset.tip = t('undo') + ' · ' + KEYS.undo;
     ui.redo.setAttribute('aria-label', t('redo'));
     ui.redo.dataset.tip = t('redo') + ' · ' + KEYS.redo;
