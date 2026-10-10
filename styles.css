@@ -14,6 +14,10 @@
   --edge: #151515;
   --outline: #151515; /* borde exterior del cubo; --edge: líneas entre fichas */
   --piece-dim: 1; /* factor de luz de las fichas (lo lee el renderer) */
+  /* Colores de las fichas (los lee el renderer): amarillo, verde y rojo. */
+  --piece-0: #e9b872;
+  --piece-1: #69995d;
+  --piece-2: #ff5a5f;
   --hole: #2a2d33;
   --on-accent: #ffffff;
   /* Gradientes sutiles de la página (el cubo no los usa). */
@@ -41,11 +45,15 @@
     --outline: #151515;
     --edge: #151515;
     --piece-dim: 1;
+    /* Modo oscuro: colores del puzzle físico original. */
+    --piece-0: #f6f204;
+    --piece-1: #12e35f;
+    --piece-2: #e81c17;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
-    --glow-1: rgba(233, 184, 114, 0.16);
-    --glow-2: rgba(105, 153, 93, 0.22);
-    --glow-3: rgba(255, 90, 95, 0.22);
+    --glow-1: rgba(246, 242, 4, 0.10);
+    --glow-2: rgba(18, 227, 95, 0.12);
+    --glow-3: rgba(232, 28, 23, 0.16);
     color-scheme: dark;
   }
 }
@@ -63,11 +71,14 @@
   --outline: #151515;
   --edge: #151515;
   --piece-dim: 1;
+  --piece-0: #f6f204;
+  --piece-1: #12e35f;
+  --piece-2: #e81c17;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
-  --glow-1: rgba(233, 184, 114, 0.16);
-  --glow-2: rgba(105, 153, 93, 0.22);
-  --glow-3: rgba(255, 90, 95, 0.22);
+  --glow-1: rgba(246, 242, 4, 0.10);
+  --glow-2: rgba(18, 227, 95, 0.12);
+  --glow-3: rgba(232, 28, 23, 0.16);
   color-scheme: dark;
 }
 
@@ -530,9 +541,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 .help-goal p { margin: 0; line-height: 1.45; }
 .swatches { display: grid; grid-template-columns: repeat(3, 10px); gap: 3px; flex: none; }
 .swatches i { width: 10px; height: 22px; border-radius: 3px; }
-.sw-y { background: #e9b872; }
-.sw-g { background: #69995d; }
-.sw-r { background: #ff5a5f; }
+.sw-y { background: var(--piece-0); }
+.sw-g { background: var(--piece-1); }
+.sw-r { background: var(--piece-2); }
 .help-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
 .help-steps li {
   display: grid;

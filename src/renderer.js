@@ -309,7 +309,8 @@
     }
 
     fillFor(piece, light) {
-      return shade(PIECE_RGB[this.puzzle.pieceColor(piece)], light * this.pieceDim);
+      const rgb = (this.pieceRgb || PIECE_RGB)[this.puzzle.pieceColor(piece)];
+      return shade(rgb, light * this.pieceDim);
     }
 
     /**
@@ -317,8 +318,15 @@
      * menos en oscuro para que contrasten con los bordes blancos) y repinta.
      */
     refreshTheme() {
-      const v = parseFloat(getComputedStyle(this.svg).getPropertyValue('--piece-dim'));
+      const css = getComputedStyle(this.svg);
+      const v = parseFloat(css.getPropertyValue('--piece-dim'));
       this.pieceDim = v > 0 && v <= 1 ? v : 1;
+      // Colores de las fichas por tema (--piece-0/1/2 en CSS, formato #rrggbb).
+      this.pieceRgb = [0, 1, 2].map((k) => {
+        const hex = css.getPropertyValue('--piece-' + k).trim();
+        const m = /^#([0-9a-f]{6})$/i.exec(hex);
+        return m ? [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16)) : PIECE_RGB[k];
+      });
       // Durante una animación el siguiente fotograma ya usa el valor nuevo.
       if (this.puzzle && !this.animating) this.paint();
     }
