@@ -95,6 +95,9 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
 /* La ayuda del botón de tema se abre hacia abajo y alineada a la derecha. */
 .prefs button.icon[data-tip]::after { bottom: auto; top: calc(100% + 8px); left: auto; right: 0; transform: none; }
 
+.stats-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.history { display: flex; gap: 8px; }
+.history button.icon { height: 40px; }
 .stats { display: flex; gap: 24px; margin: 0; }
 .stats div { display: flex; flex-direction: column; }
 .stats dt { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
@@ -234,9 +237,6 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
 }
 
 
-.group { display: flex; gap: 8px; }
-.group.col { flex-direction: column; }
-.group > button { flex: 1; }
 
 button, select {
   font: inherit;
@@ -254,10 +254,9 @@ button {
 button:hover:not(:disabled) {
   border-color: var(--accent);
   background-color: color-mix(in srgb, var(--accent) 8%, var(--bg));
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 18%, transparent);
 }
-button:active:not(:disabled) { transform: translateY(0) scale(0.97); box-shadow: none; }
+button:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
 button:disabled { opacity: 0.45; cursor: default; }
 button.primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -269,10 +268,7 @@ button.primary:hover:not(:disabled) {
   filter: brightness(1.08) saturate(1.1);
   box-shadow: 0 6px 18px color-mix(in srgb, var(--accent-2) 35%, transparent);
 }
-/* Los iconos de deshacer/rehacer se inclinan un poco en su sentido. */
-button.icon svg { transition: transform 0.25s ease; }
-#undo:hover:not(:disabled) svg { transform: rotate(-18deg); }
-#redo:hover:not(:disabled) svg { transform: rotate(18deg); }
+
 
 /* Botones de icono con ayuda emergente (atajo de teclado) al pasar el ratón. */
 button.icon { position: relative; flex: 0 0 auto; display: grid; place-items: center; width: 42px; padding: 0; }
@@ -340,7 +336,7 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 
 /* Cambio de tema: fundido de toda la página (View Transitions API). */
 ::view-transition-old(root),
-::view-transition-new(root) { animation-duration: 0.45s; animation-timing-function: ease; }
+::view-transition-new(root) { animation-duration: 0.2s; animation-timing-function: ease; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }

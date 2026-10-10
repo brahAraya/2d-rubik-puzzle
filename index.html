@@ -41,13 +41,6 @@
             </button>
           </div>
         </div>
-        <dl class="stats">
-          <div><dt data-i18n="stats.moves">Movimientos</dt><dd id="moves">0</dd></div>
-          <div><dt data-i18n="stats.time">Tiempo</dt><dd id="time">0:00</dd></div>
-        </dl>
-
-        <hr class="sep">
-
         <label><span data-i18n="size">Tamaño</span>
           <select id="size">
             <option value="2">2 × 2 × 2</option>
@@ -57,15 +50,23 @@
           </select>
         </label>
 
-        <div class="group">
-          <button id="new" type="button" class="primary" data-i18n="new">Nuevo estado aleatorio</button>
-          <button id="undo" type="button" class="icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-          </button>
-          <button id="redo" type="button" class="icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
-          </button>
+        <hr class="sep">
+
+        <div class="stats-row">
+          <dl class="stats">
+            <div><dt data-i18n="stats.moves">Movimientos</dt><dd id="moves">0</dd></div>
+            <div><dt data-i18n="stats.time">Tiempo</dt><dd id="time">0:00</dd></div>
+          </dl>
+          <div class="history">
+            <button id="undo" type="button" class="icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+            </button>
+            <button id="redo" type="button" class="icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+            </button>
+          </div>
         </div>
+        <button id="new" type="button" class="primary" data-i18n="new">Nuevo estado aleatorio</button>
         <button id="solve-reset" type="button" data-i18n="reset">Restablecer (resuelto)</button>
 
         <details class="help">
