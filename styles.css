@@ -8,6 +8,7 @@
   --ok: #10b981;
   --bad: #e11d48;
   --edge: #1b1d22;
+  --outline: #1b1d22; /* borde exterior del cubo */
   --hole: #2a2d33;
   --on-accent: #ffffff;
   /* Gradientes sutiles de la página (el cubo no los usa). */
@@ -28,6 +29,7 @@
     --accent: #58a6ff;
     --hole: #0c0d0f;
     --on-accent: #0d1117;
+    --outline: #ffffff;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
     --glow-1: rgba(88, 166, 255, 0.10);
@@ -44,6 +46,7 @@
   --accent: #58a6ff;
   --hole: #0c0d0f;
   --on-accent: #0d1117;
+  --outline: #ffffff;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
   --glow-1: rgba(88, 166, 255, 0.10);
@@ -154,7 +157,7 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
 }
 
 .board-shadow { fill: var(--hole); filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.25)); }
-.board-outline { fill: none; stroke: var(--edge); stroke-width: 3; stroke-linejoin: round; pointer-events: none; }
+.board-outline { fill: none; stroke: var(--outline); stroke-width: 3; stroke-linejoin: round; pointer-events: none; }
 
 .slot { stroke: var(--edge); stroke-width: 1.4; stroke-linejoin: round; }
 .slot.fixed { stroke-dasharray: 3 3; }
