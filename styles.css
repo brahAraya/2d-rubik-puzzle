@@ -145,26 +145,19 @@ h1 { margin: 0; font-size: 1.1rem; letter-spacing: -0.01em; white-space: nowrap;
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 /* La monoespaciada es ancha: estos botones van en una sola línea y algo más pequeños. */
 .row2 button { font-size: 0.93em; padding-left: 10px; padding-right: 10px; }
-/*
- * Botón con icono a la izquierda y texto centrado en TODO el botón:
- * columnas [icono | texto | hueco]. El hueco mide como el icono y equilibra
- * el centrado; si el texto no cabe, el hueco se encoge (hasta 0) y el texto
- * se desplaza lo justo a la derecha sin pisar el icono.
- */
+/* Botón con icono: icono y texto forman un bloque centrado, separados 8 px
+   (el patrón estándar de Material, Apple HIG y Fluent). */
 button.with-icon {
-  display: grid;
-  grid-template-columns: 17px 1fr minmax(0, 17px);
+  display: inline-flex;
   align-items: center;
-  column-gap: 6px;
-  padding-left: 12px;
-  padding-right: 12px;
+  justify-content: center;
+  gap: 8px;
   white-space: nowrap;
 }
-button.with-icon > span { text-align: center; }
-button.with-icon::before { content: none; }
 button.with-icon svg {
   width: 17px;
   height: 17px;
+  flex: none;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -173,7 +166,8 @@ button.with-icon svg {
 }
 .stats { display: flex; gap: 24px; margin: 0; }
 .stats div { display: flex; flex-direction: column; }
-.stats dt { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
+.stats dt,
+.field-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
 .stats dd { margin: 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 .sep {
