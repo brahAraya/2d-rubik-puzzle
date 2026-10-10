@@ -347,9 +347,9 @@ button.with-icon svg {
 }
 
 .board-shadow { fill: var(--hole); }
-.board-outline { fill: none; stroke: var(--outline); stroke-width: 3; stroke-linejoin: round; pointer-events: none; }
+.board-outline { fill: none; stroke: var(--outline); stroke-width: 6; stroke-linejoin: round; pointer-events: none; }
 
-.slot { stroke: var(--edge); stroke-width: 1.4; stroke-linejoin: round; }
+.slot { stroke: var(--edge); stroke-width: 2.6; stroke-linejoin: round; }
 .slot.fixed { stroke-dasharray: 3 3; }
 /* Hueco que dejan las fichas mientras giran: transparente y sin líneas, para
    que se vea el fondo oscuro del tablero (board-shadow) y sólo los bordes de
