@@ -132,12 +132,12 @@
     view.mount(puzzle);
     selectedKey = null;
     view.setSelection(null);
-    ui.size.value = String(puzzle.target.n);
+    markSize(puzzle.target.n);
     updateHud();
   }
 
   function rebuild() {
-    newPuzzle(+ui.size.value);
+    newPuzzle(currentSize());
     startRandom();
   }
 
@@ -333,7 +333,41 @@
     view.resetView();
     resetTimer();
   });
-  ui.size.addEventListener('change', rebuild);
+  /* ---------------- Tamaño (botones de opción) ---------------- */
+
+  function currentSize() {
+    const b = ui.size.querySelector('[aria-checked="true"]');
+    return b ? +b.dataset.size : 3;
+  }
+
+  function markSize(n) {
+    ui.size.querySelectorAll('[data-size]').forEach((b) => {
+      const on = +b.dataset.size === n;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1; // patrón radiogroup: una sola parada de tabulación
+    });
+  }
+
+  function chooseSize(n) {
+    if (n === currentSize()) return;
+    markSize(n);
+    rebuild();
+  }
+
+  ui.size.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-size]');
+    if (b) chooseSize(+b.dataset.size);
+  });
+  // Flechas dentro del grupo, como un radiogroup nativo.
+  ui.size.addEventListener('keydown', (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    e.stopPropagation(); // no mover el selector del tablero
+    const n = Math.min(5, Math.max(2, currentSize() + step));
+    chooseSize(n);
+    ui.size.querySelector(`[data-size="${n}"]`).focus();
+  });
 
   /* ---------------- Instrucciones desplegables ---------------- */
 

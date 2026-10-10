@@ -45,14 +45,15 @@
             </div>
           </div>
         </div>
-        <label><span class="field-label" data-i18n="size">Tamaño</span>
-          <select id="size">
-            <option value="2">2 × 2 × 2</option>
-            <option value="3" selected>3 × 3 × 3</option>
-            <option value="4">4 × 4 × 4</option>
-            <option value="5">5 × 5 × 5</option>
-          </select>
-        </label>
+        <div class="field">
+          <span class="field-label" id="size-label" data-i18n="size">Tamaño</span>
+          <div id="size" class="segmented" role="radiogroup" aria-labelledby="size-label">
+            <button type="button" role="radio" data-size="2" aria-checked="false">2×2×2</button>
+            <button type="button" role="radio" data-size="3" aria-checked="true">3×3×3</button>
+            <button type="button" role="radio" data-size="4" aria-checked="false">4×4×4</button>
+            <button type="button" role="radio" data-size="5" aria-checked="false">5×5×5</button>
+          </div>
+        </div>
 
         <hr class="sep">
 
