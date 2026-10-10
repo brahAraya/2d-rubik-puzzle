@@ -48,7 +48,6 @@
     ui.lang.value = ProppI18n.lang;
     ProppI18n.apply(document, KEYS);
     ui.undo.setAttribute('aria-label', t('undo'));
-    ui.spin.setAttribute('aria-label', t('spin'));
     ui.spin.dataset.tip = t('spin') + ' · R';
     ui.undo.dataset.tip = t('undo') + ' · ' + KEYS.undo;
     ui.redo.setAttribute('aria-label', t('redo'));
@@ -314,10 +313,12 @@
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
   $('win-new').addEventListener('click', startRandom);
+  // Restablecer: las fichas vuelven a su sitio y después el tablero gira,
+  // animado y por el camino más corto, hasta la orientación original.
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
-    view.setViewTurns(0);
     view.sync();
+    view.resetView();
     resetTimer();
   });
   ui.size.addEventListener('change', rebuild);

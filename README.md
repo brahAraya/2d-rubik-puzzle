@@ -49,10 +49,12 @@ browser. No build step or server is needed.
 - **Rotate:** click to rotate the group 60° clockwise. That is the only move.
   To rotate further, click again; six clicks bring the group back to where it
   started.
-- **Rotate the board:** the ↻ button (or the `R` key) turns the whole board
-  60°, like turning the frame of the physical puzzle. It does not count as a
-  move, and you can win in any orientation. Turned 60°, the solid cube looks
-  like a hollow corner.
+- **Rotate the board:** the “Rotate board” button (or the `R` key) turns the
+  whole board 60°, like turning the frame of the physical puzzle. It does not
+  count as a move, and you can win in any orientation. Turned 60°, the solid
+  cube looks like a hollow corner.
+- **Reset:** puts every tile back in place and then turns the board back to
+  its original orientation, with an animation that takes the shortest way.
 - **Touch:** tap to select a group, then tap it again to rotate it.
 - **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates, `R`
   rotates the board.

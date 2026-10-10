@@ -50,10 +50,13 @@ en un navegador. No hace falta compilar ni usar un servidor.
 - **Girar:** haz clic para girar el grupo 60° en el sentido de las agujas del
   reloj. Es el único movimiento. Para girar más, vuelve a hacer clic; con seis
   clics el grupo vuelve a su posición inicial.
-- **Girar el tablero:** el botón ↻ (o la tecla `R`) gira el tablero completo
-  60°, como girar el marco del puzzle físico. No cuenta como movimiento y se
-  puede ganar en cualquier orientación. Girado 60°, el cubo macizo se ve como
-  un rincón hueco.
+- **Girar el tablero:** el botón «Girar tablero» (o la tecla `R`) gira el
+  tablero completo 60°, como girar el marco del puzzle físico. No cuenta como
+  movimiento y se puede ganar en cualquier orientación. Girado 60°, el cubo
+  macizo se ve como un rincón hueco.
+- **Restablecer:** devuelve todas las fichas a su sitio y después gira el
+  tablero hasta su orientación original, con una animación que va por el
+  camino más corto.
 - **Táctil:** toca un grupo para seleccionarlo y vuelve a tocarlo para girarlo.
 - **Teclado:** las flechas mueven la selección, `E` o `Enter` gira y `R` gira
   el tablero.

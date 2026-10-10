@@ -225,33 +225,54 @@
       if (!this.animating) this.paint();
     }
 
-    /** Gira el tablero completo 60° en sentido horario (animado, en cola). */
-    rotateView() {
-      this.queue.push({ type: 'view' });
+    /**
+     * Gira el tablero completo `steps` × 60° (positivo = horario), animado y
+     * en cola con los demás movimientos.
+     */
+    rotateView(steps = 1) {
+      if (!steps) return;
+      this.queue.push({ type: 'view', steps });
       if (!this.animating) this._next();
     }
 
-    _animateView() {
+    /** Vuelve a la orientación original por el camino más corto (animado). */
+    resetView() {
+      // La orientación final es la que queda tras los giros ya en cola.
+      const pending = this.queue.reduce((acc, j) => acc + (j.type === 'view' ? j.steps : 0), 0);
+      const v = (((this.viewTurns + pending) % 6) + 6) % 6;
+      this.rotateView(v <= 3 ? -v : 6 - v);
+    }
+
+    _animateView(steps) {
       const from = this.viewTurns;
-      const to = from + 1;
+      const n = Math.abs(steps);
+      const dir = Math.sign(steps);
+      const next = (o) => (dir > 0 ? ProppCore.NEXT60[o] : ProppCore.NEXT60[ProppCore.NEXT60[o]]);
       const tiling = this.display.tiling;
       const perm = this.display.perm;
-      const duration = this.duration * 1.3;
+      // Orientación visible de cada rombo en cada paso de 60° del giro.
+      const seq = tiling.slots.map((s) => {
+        const list = [this._vis(s.orient)];
+        for (let k = 0; k < n; k++) list.push(next(list[k]));
+        return list;
+      });
+      const duration = this.duration * (0.8 + 0.5 * n);
       const start = performance.now();
       const frame = (now) => {
         const t = duration > 0 ? Math.min(1, Math.max(0, (now - start) / duration)) : 1;
-        const f = ease(t);
-        this._applyViewTransform((from + f) * 60);
-        // Cada rombo pasa de su orientación visible a la siguiente: interpolamos la luz.
-        tiling.slots.forEach((s) => {
-          const o = this._vis(s.orient);
-          const light = LIGHT[o] * (1 - f) + LIGHT[ProppCore.NEXT60[o]] * f;
+        const p = ease(t) * n; // pasos recorridos (0..n)
+        this._applyViewTransform((from + dir * p) * 60);
+        const i = Math.min(Math.floor(p), n - 1);
+        const f = p - i;
+        // Interpolamos la luz de cada rombo entre las orientaciones por las que pasa.
+        tiling.slots.forEach((s, k) => {
+          const light = LIGHT[seq[k][i]] * (1 - f) + LIGHT[seq[k][i + 1]] * f;
           this.slotEls[s.id].setAttribute('fill', this.fillFor(perm[s.id], light));
         });
         if (t < 1) {
           this._raf = requestAnimationFrame(frame);
         } else {
-          this.viewTurns = to % 6;
+          this.viewTurns = (((from + steps) % 6) + 6) % 6;
           this._applyViewTransform(this.viewTurns * 60);
           this.paint();
           if (this.onViewChange) this.onViewChange(this.viewTurns);
@@ -409,6 +430,8 @@
       this.animating = false;
       if (this._raf) cancelAnimationFrame(this._raf);
       this.animLayer.textContent = '';
+      // Si se interrumpió un giro del tablero, volvemos a su orientación estable.
+      this._applyViewTransform(this.viewTurns * 60);
       this.display = this._current();
       this.paint();
     }
@@ -427,7 +450,7 @@
         return;
       }
       this.animating = true;
-      if (job.type === 'view') return this._animateView();
+      if (job.type === 'view') return this._animateView(job.steps);
       const p = this.puzzle;
       const c = job.center;
       const steps60 = Math.round(Math.abs(job.angle) / (Math.PI / 3));
