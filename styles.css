@@ -16,9 +16,9 @@
   --panel-2: #f8f6f1;
   --accent-2: #6d5dfc;
   /* Halos del fondo con los colores del cubo (amarillo, verde y rojo). */
-  --glow-1: rgba(255, 208, 0, 0.30);
-  --glow-2: rgba(0, 158, 96, 0.20);
-  --glow-3: rgba(214, 40, 57, 0.18);
+  --glow-1: rgba(255, 208, 0, 0.45);
+  --glow-2: rgba(0, 158, 96, 0.32);
+  --glow-3: rgba(214, 40, 57, 0.28);
 }
 
 /* Tema oscuro: el del sistema si el usuario no eligió, o el elegido con el botón. */
