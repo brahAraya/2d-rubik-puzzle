@@ -30,8 +30,8 @@
     --accent: #58a6ff;
     --hole: #0c0d0f;
     --on-accent: #0d1117;
-    --outline: #ffffff;
-    --edge: #ffffff;
+    --outline: var(--ink);
+    --edge: var(--ink);
     --piece-dim: 0.8;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
@@ -49,8 +49,8 @@
   --accent: #58a6ff;
   --hole: #0c0d0f;
   --on-accent: #0d1117;
-  --outline: #ffffff;
-  --edge: #ffffff;
+  --outline: var(--ink);
+  --edge: var(--ink);
   --piece-dim: 0.8;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
