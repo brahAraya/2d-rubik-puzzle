@@ -110,7 +110,7 @@
       const keys = corners3d.map((c) => latticeKey(c[0], c[1], c[2]));
       const cx = (corners[0][0] + corners[2][0]) / 2;
       const cy = (corners[0][1] + corners[2][1]) / 2;
-      slots.push({ id: slots.length, orient, corners, keys, centroid: [cx, cy] });
+      slots.push({ id: slots.length, orient, corners, corners3d, keys, centroid: [cx, cy] });
     }
 
     // Caras superiores: una por columna (i, j), a la altura h[i][j].
@@ -179,8 +179,13 @@
     }
     // Convexo (esquina de cubito que sobresale): las caras se encuentran en su
     // esquina máxima (índice 2). Cóncavo (rincón): esquina mínima (índice 0).
-    const kind = v.incid.every((x) => x.corner === 2) ? 'convexo' : 'cóncavo';
-    return { id, key: v.key, center, ring, kind };
+    const convex = v.incid.every((x) => x.corner === 2);
+    if (!convex && !v.incid.every((x) => x.corner === 0)) throw new Error('Hexágono mixto en ' + v.key);
+    // Volteo de 180°: un cubito convexo se quita de la columna (X-1, Y-1);
+    // en un rincón cóncavo se pone un cubito en la columna (X, Y).
+    const p3 = slots[v.incid[0].slot].corners3d[v.incid[0].corner];
+    const flip = convex ? { i: p3[0] - 1, j: p3[1] - 1, delta: -1 } : { i: p3[0], j: p3[1], delta: 1 };
+    return { id, key: v.key, center, ring, kind: convex ? 'convexo' : 'cóncavo', flip };
   }
 
   function angleOf(p, c) {
@@ -274,21 +279,52 @@
   /* Puzzle                                                             */
   /* ------------------------------------------------------------------ */
 
+  // Girar un rombo 60° en sentido horario cambia su orientación:
+  // superior → izquierda → derecha → superior (verificado en los tests).
+  const NEXT60 = [ORIENT.LEFT, ORIENT.RIGHT, ORIENT.TOP];
+
+  const OPS = ['cw', 'ccw', 'flip'];
+  const INVERSE = { cw: 'ccw', ccw: 'cw', flip: 'flip' };
+  const OP_ANGLE = { cw: (2 * Math.PI) / 3, ccw: (4 * Math.PI) / 3, flip: Math.PI };
+
+  function sameHeights(a, b) {
+    return a.length === b.length && a.every((row, i) => row.every((h, j) => h === b[i][j]));
+  }
+
+  function cloneHeights(h) {
+    return h.map((r) => r.slice());
+  }
+
+  /**
+   * Estado = forma (partición plana) + permutación de piezas.
+   *
+   * Las casillas tienen una identidad estable aunque cambie la forma: la cara
+   * superior de la columna (i, j), la cara +x de la fila (j, k) y la cara +y
+   * de la fila (i, k). Un volteo de 180° quita o pone un cubito: las tres caras
+   * del hexágono giran media vuelta y caen exactamente en las nuevas posiciones
+   * de esas mismas tres casillas, con la misma orientación. Por eso el volteo
+   * cambia la forma pero NO la permutación, y los giros de 120°/240° son los
+   * únicos que permutan piezas.
+   */
   class ProppPuzzle {
     /**
      * @param {object} opts
-     * @param {number[][]} opts.heights  partición plana que define el tablero
+     * @param {number[][]} opts.heights  partición plana del estado resuelto
      * @param {'color'|'numerado'} [opts.mode]  'color': basta con que cada
      *        orientación tenga su color; 'numerado': cada pieza vuelve a su casilla.
+     * @param {boolean} [opts.allowFlip]  permite el volteo de 180° (quitar o
+     *        poner un cubito), que cambia la forma del tablero.
      */
     constructor(opts) {
-      this.tiling = buildTiling(opts.heights);
+      this.target = buildTiling(opts.heights);
       this.mode = opts.mode === 'numerado' ? 'numerado' : 'color';
-      this.slotCount = this.tiling.slots.length;
+      this.allowFlip = !!opts.allowFlip;
+      this.slotCount = this.target.slots.length;
       this.perm = Array.from({ length: this.slotCount }, (_, i) => i);
       this.history = [];
       this.future = [];
       this.listeners = new Set();
+      this._setTiling(this.target);
       this._buildComponents();
     }
 
@@ -298,30 +334,50 @@
       return this.tiling.hexagons;
     }
 
-    // Componentes conexas de casillas enlazadas por hexágonos que se solapan.
-    // Una pieza nunca puede salir de su componente.
+    get heights() {
+      return this.tiling.heights;
+    }
+
+    _setTiling(tiling) {
+      this.tiling = tiling;
+      this.hexByKey = new Map(tiling.hexagons.map((h) => [h.key, h]));
+      // Casillas que, con la forma actual, pertenecen a algún cubito girable.
+      this.movable = new Array(this.slotCount).fill(false);
+      tiling.hexagons.forEach((h) => h.ring.forEach((s) => (this.movable[s] = true)));
+    }
+
+    // Zonas: conjuntos de casillas entre los que pueden viajar las piezas.
+    // Sin volteo, son las componentes conexas de los hexágonos (fijos). Con
+    // volteo, cualquier forma es alcanzable y los hexágonos de todas las formas
+    // enlazan todas las casillas (verificado en los tests), así que hay una
+    // sola zona.
     _buildComponents() {
-      const parent = Array.from({ length: this.slotCount }, (_, i) => i);
-      const find = (x) => (parent[x] === x ? x : (parent[x] = find(parent[x])));
-      this.hexagons.forEach((h) => {
-        parent[find(h.ring[1])] = find(h.ring[0]);
-        parent[find(h.ring[2])] = find(h.ring[0]);
-      });
-      const groups = new Map();
-      for (let s = 0; s < this.slotCount; s++) {
-        const r = find(s);
-        if (!groups.has(r)) groups.set(r, []);
-        groups.get(r).push(s);
+      if (this.allowFlip) {
+        this.components = [Array.from({ length: this.slotCount }, (_, i) => i)];
+      } else {
+        const parent = Array.from({ length: this.slotCount }, (_, i) => i);
+        const find = (x) => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+        this.target.hexagons.forEach((h) => {
+          parent[find(h.ring[1])] = find(h.ring[0]);
+          parent[find(h.ring[2])] = find(h.ring[0]);
+        });
+        const groups = new Map();
+        for (let s = 0; s < this.slotCount; s++) {
+          const r = find(s);
+          if (!groups.has(r)) groups.set(r, []);
+          groups.get(r).push(s);
+        }
+        this.components = [...groups.values()];
       }
-      this.components = [...groups.values()];
       this.componentOf = new Array(this.slotCount);
       this.components.forEach((c, ci) => c.forEach((s) => (this.componentOf[s] = ci)));
-      this.movable = new Array(this.slotCount).fill(false);
-      this.hexagons.forEach((h) => h.ring.forEach((s) => (this.movable[s] = true)));
+      // Casillas que pueden moverse en algún momento de la partida.
+      this.everMovable = new Array(this.slotCount).fill(false);
+      this.components.forEach((c) => c.length > 1 && c.forEach((s) => (this.everMovable[s] = true)));
     }
 
     pieceColor(piece) {
-      return this.tiling.slots[piece].orient;
+      return this.target.slots[piece].orient;
     }
 
     colorAt(slot) {
@@ -358,37 +414,83 @@
       return best;
     }
 
-    /** Valida que un movimiento sea legal antes de ejecutarlo o animarlo. */
-    validateMove(hexId, turns) {
-      if (turns !== 1 && turns !== 2) {
-        return { ok: false, reason: 'Sólo se permiten giros de 120° o 240°' };
+    /** Hexágono cuyo centro es el vértice `key`, o -1. */
+    hexAt(key) {
+      const h = this.hexByKey.get(key);
+      return h ? h.id : -1;
+    }
+
+    /**
+     * Valida un movimiento antes de ejecutarlo o animarlo.
+     * @param {number} hexId
+     * @param {'cw'|'ccw'|'flip'} op
+     */
+    validateMove(hexId, op) {
+      if (!OPS.includes(op)) return { ok: false, reason: 'Sólo se permiten giros de 120° o 240°' };
+      if (op === 'flip' && !this.allowFlip) {
+        return { ok: false, reason: 'El volteo de 180° está desactivado en esta partida' };
       }
       const h = this.hexagons[hexId];
       if (!h) return { ok: false, reason: 'No hay un cubito válido en ese punto' };
-      return validateTriple(this.tiling, h.ring, h.key);
+      const check = validateTriple(this.tiling, h.ring, h.key);
+      if (!check.ok) return check;
+      if (op === 'flip') {
+        const next = this.tiling.heights[h.flip.i] && this.tiling.heights[h.flip.i][h.flip.j];
+        if (next === undefined || next + h.flip.delta < 0 || next + h.flip.delta > this.tiling.n) {
+          return { ok: false, reason: 'El volteo sacaría un cubito de la caja' };
+        }
+      }
+      return { ok: true };
     }
 
     /* ---- Movimientos ---- */
 
-    // Gira las piezas del hexágono `turns` × 120° en sentido horario.
-    _apply(hexId, turns) {
-      const ring = this.hexagons[hexId].ring;
-      const old = ring.map((s) => this.perm[s]);
-      for (let k = 0; k < 3; k++) this.perm[ring[(k + turns) % 3]] = old[k];
+    // Aplica un movimiento ya validado y devuelve la transición para animarla.
+    _apply(hexId, op) {
+      const h = this.hexagons[hexId];
+      const before = { tiling: this.tiling, perm: this.perm.slice() };
+      if (op === 'flip') {
+        const heights = cloneHeights(this.tiling.heights);
+        heights[h.flip.i][h.flip.j] += h.flip.delta;
+        this._setTiling(buildTiling(heights));
+      } else {
+        const turns = op === 'cw' ? 1 : 2;
+        const old = h.ring.map((s) => this.perm[s]);
+        for (let k = 0; k < 3; k++) this.perm[h.ring[(k + turns) % 3]] = old[k];
+      }
+      return {
+        op,
+        key: h.key,
+        center: h.center,
+        ring: h.ring.slice(),
+        angle: OP_ANGLE[op],
+        before,
+        after: { tiling: this.tiling, perm: this.perm.slice() },
+      };
     }
 
     /**
-     * Ejecuta un giro. turns = 1 (120° horario) o 2 (240° horario = 120° antihorario).
-     * @returns {{ok:boolean, reason?:string}}
+     * Ejecuta un movimiento: 'cw' (120° horario), 'ccw' (240° horario =
+     * 120° antihorario) o 'flip' (volteo de 180°).
+     * @returns {{ok:boolean, reason?:string, transition?:object}}
      */
-    rotate(hexId, turns = 1) {
-      const check = this.validateMove(hexId, turns);
+    move(hexId, op) {
+      const check = this.validateMove(hexId, op);
       if (!check.ok) return check;
-      this._apply(hexId, turns);
-      this.history.push({ hex: hexId, turns });
+      const transition = this._apply(hexId, op);
+      this.history.push({ key: transition.key, op });
       this.future.length = 0;
-      this._emit({ type: 'move', hex: hexId, turns });
-      return { ok: true };
+      this._emit({ type: 'move', transition });
+      return { ok: true, transition };
+    }
+
+    /** Giro de 120° (turns = 1) o 240° (turns = 2) en sentido horario. */
+    rotate(hexId, turns = 1) {
+      return this.move(hexId, turns === 1 ? 'cw' : turns === 2 ? 'ccw' : 'invalid');
+    }
+
+    flip(hexId) {
+      return this.move(hexId, 'flip');
     }
 
     canUndo() {
@@ -399,24 +501,30 @@
       return this.future.length > 0;
     }
 
-    /** Deshace el último giro. Devuelve el giro inverso aplicado (para animarlo). */
+    /** Deshace el último movimiento. Devuelve la transición (para animarla) o null. */
     undo() {
-      const m = this.history.pop();
+      const m = this.history[this.history.length - 1];
       if (!m) return null;
-      const inv = { hex: m.hex, turns: 3 - m.turns };
-      this._apply(inv.hex, inv.turns);
+      const hexId = this.hexAt(m.key);
+      const op = INVERSE[m.op];
+      if (!this.validateMove(hexId, op).ok) return null;
+      this.history.pop();
+      const transition = this._apply(hexId, op);
       this.future.push(m);
-      this._emit({ type: 'undo', hex: inv.hex, turns: inv.turns });
-      return inv;
+      this._emit({ type: 'undo', transition });
+      return transition;
     }
 
     redo() {
-      const m = this.future.pop();
+      const m = this.future[this.future.length - 1];
       if (!m) return null;
-      this._apply(m.hex, m.turns);
+      const hexId = this.hexAt(m.key);
+      if (!this.validateMove(hexId, m.op).ok) return null;
+      this.future.pop();
+      const transition = this._apply(hexId, m.op);
       this.history.push(m);
-      this._emit({ type: 'redo', hex: m.hex, turns: m.turns });
-      return m;
+      this._emit({ type: 'redo', transition });
+      return transition;
     }
 
     get moveCount() {
@@ -425,48 +533,62 @@
 
     /* ---- Estado ---- */
 
-    isSolved() {
-      for (let s = 0; s < this.slotCount; s++) {
-        if (this.mode === 'numerado' ? this.perm[s] !== s : this.colorAt(s) !== this.tiling.slots[s].orient) {
-          return false;
-        }
-      }
+    _slotOk(s, perm, tiling) {
+      if (tiling !== this.target && tiling.slots[s].keys.join() !== this.target.slots[s].keys.join()) return false;
+      return this.mode === 'numerado' ? perm[s] === s : this.pieceColor(perm[s]) === this.target.slots[s].orient;
+    }
+
+    _isSolvedState(perm, heights) {
+      if (!sameHeights(heights, this.target.heights)) return false;
+      for (let s = 0; s < this.slotCount; s++) if (!this._slotOk(s, perm, this.target)) return false;
       return true;
     }
 
-    /** Fracción de casillas correctas (para la barra de progreso). */
+    isSolved() {
+      return this._isSolvedState(this.perm, this.tiling.heights);
+    }
+
+    /** Fracción de casillas correctas (forma y pieza) para la barra de progreso. */
     progress() {
       let ok = 0;
       let total = 0;
       for (let s = 0; s < this.slotCount; s++) {
-        if (!this.movable[s]) continue;
+        if (!this.everMovable[s]) continue;
         total++;
-        const good = this.mode === 'numerado' ? this.perm[s] === s : this.colorAt(s) === this.tiling.slots[s].orient;
-        if (good) ok++;
+        if (this._slotOk(s, this.perm, this.tiling)) ok++;
       }
       return total ? ok / total : 1;
     }
 
     /**
-     * Analiza si una permutación es alcanzable desde el estado resuelto.
+     * Analiza si un estado es alcanzable desde el estado resuelto.
      *
-     * Cada giro es un 3-ciclo, es decir, una permutación PAR. Los 3-ciclos de
-     * una componente conexa generan exactamente el grupo alternado sobre ella,
-     * así que un estado es alcanzable si y sólo si:
-     *   1. es una permutación de las piezas,
-     *   2. ninguna pieza ha salido de su componente,
-     *   3. la permutación restringida a cada componente es par.
-     * (Para una componente de un solo hexágono A₃ = C₃, que coincide con lo
-     * que generan sus giros, así que el criterio sigue siendo exacto.)
+     * Cada giro es un 3-ciclo, es decir, una permutación PAR, y el volteo no
+     * permuta piezas. Los 3-ciclos de una zona conexa generan exactamente el
+     * grupo alternado sobre ella, así que un estado es alcanzable si y sólo si:
+     *   1. la forma es una partición plana válida (y, sin volteo, la original),
+     *   2. es una permutación de las piezas,
+     *   3. ninguna pieza ha salido de su zona,
+     *   4. la permutación restringida a cada zona es par.
+     * (Con volteo, las particiones planas están conectadas por volteos, así que
+     * toda forma es alcanzable con cualquier permutación par.)
      */
-    analyze(perm = this.perm) {
+    analyze(perm = this.perm, heights = this.tiling.heights) {
       const problems = [];
+      try {
+        if (validateHeights(heights) !== this.target.n) problems.push('La forma no tiene el tamaño del tablero');
+      } catch (e) {
+        problems.push('Forma inválida: ' + e.message);
+      }
+      if (!problems.length && !this.allowFlip && !sameHeights(heights, this.target.heights)) {
+        problems.push('Sin volteo la forma del tablero no puede cambiar');
+      }
       if (!Array.isArray(perm) || perm.length !== this.slotCount) {
-        return { solvable: false, problems: ['Tamaño de estado incorrecto'] };
+        return { solvable: false, problems: problems.concat('Tamaño de estado incorrecto'), oddComponents: [] };
       }
       const seen = new Set(perm);
       if (seen.size !== this.slotCount || perm.some((p) => !Number.isInteger(p) || p < 0 || p >= this.slotCount)) {
-        return { solvable: false, problems: ['El estado no es una permutación de las piezas'] };
+        return { solvable: false, problems: problems.concat('El estado no es una permutación de las piezas'), oddComponents: [] };
       }
       const oddComponents = [];
       this.components.forEach((comp, ci) => {
@@ -484,10 +606,10 @@
      * Corrige la paridad de un estado impar con una transposición.
      * En modo color se intercambian dos piezas del MISMO color, de modo que el
      * aspecto del tablero no cambia; si no existe tal pareja (o en modo
-     * numerado) se intercambian las dos primeras piezas de la componente.
+     * numerado) se intercambian las dos primeras piezas de la zona.
      */
-    fixParity(perm) {
-      const { oddComponents = [] } = this.analyze(perm);
+    fixParity(perm, heights = this.tiling.heights) {
+      const { oddComponents = [] } = this.analyze(perm, heights);
       oddComponents.forEach((ci) => {
         const comp = this.components[ci];
         let pair = null;
@@ -510,12 +632,27 @@
       return perm;
     }
 
+    /** Forma aleatoria alcanzable: paseo aleatorio de volteos desde la forma resuelta. */
+    _randomShape(rng) {
+      let tiling = this.target;
+      const steps = 12 * Math.pow(tiling.n, 3);
+      for (let k = 0; k < steps && tiling.hexagons.length; k++) {
+        const h = tiling.hexagons[randInt(rng, tiling.hexagons.length)];
+        const heights = cloneHeights(tiling.heights);
+        heights[h.flip.i][h.flip.j] += h.flip.delta;
+        tiling = buildTiling(heights);
+      }
+      return tiling.heights;
+    }
+
     /**
-     * Estado inicial aleatorio uniforme entre los estados ALCANZABLES:
-     * baraja cada componente y corrige la paridad.
+     * Estado inicial aleatorio entre los estados ALCANZABLES: baraja cada zona,
+     * corrige la paridad y, con volteo, elige además una forma aleatoria.
      */
     randomize(rng = Math.random) {
       let perm;
+      let heights;
+      let tries = 0;
       do {
         perm = Array.from({ length: this.slotCount }, (_, i) => i);
         for (const comp of this.components) {
@@ -526,38 +663,34 @@
             perm[comp[r]] = t;
           }
         }
-        this.fixParity(perm);
-      } while (this.hexagons.length > 0 && this._looksSolved(perm));
-      this.setState(perm);
+        heights = this.allowFlip ? this._randomShape(rng) : this.target.heights;
+        this.fixParity(perm, heights);
+      } while (this._isSolvedState(perm, heights) && this.target.hexagons.length > 0 && ++tries < 50);
+      this.setState(perm, heights);
     }
 
-    /** Mezcla aplicando `count` giros aleatorios (alternativa a randomize). */
+    /** Mezcla aplicando `count` movimientos aleatorios (alternativa a randomize). */
     scramble(count, rng = Math.random) {
-      const perm = this.perm.slice();
-      this.perm = perm;
-      let last = -1;
+      let lastKey = null;
       for (let i = 0; i < count && this.hexagons.length; i++) {
         let h;
-        do h = randInt(rng, this.hexagons.length);
-        while (h === last && this.hexagons.length > 1);
-        last = h;
-        this._apply(h, 1 + randInt(rng, 2));
+        let guard = 0;
+        do h = this.hexagons[randInt(rng, this.hexagons.length)];
+        while (h.key === lastKey && this.hexagons.length > 1 && ++guard < 20);
+        lastKey = h.key;
+        const r = randInt(rng, this.allowFlip ? 3 : 2);
+        this._apply(h.id, OPS[r]);
       }
-      this.setState(this.perm);
+      this.setState(this.perm, this.tiling.heights);
     }
 
-    _looksSolved(perm) {
-      const saved = this.perm;
-      this.perm = perm;
-      const r = this.isSolved();
-      this.perm = saved;
-      return r;
-    }
-
-    /** Reemplaza el estado tras validarlo. Borra el historial. */
-    setState(perm) {
-      const a = this.analyze(perm);
+    /** Reemplaza el estado (permutación y forma) tras validarlo. Borra el historial. */
+    setState(perm, heights = this.tiling.heights) {
+      const a = this.analyze(perm, heights);
       if (!a.solvable) throw new Error('Estado imposible: ' + a.problems.join('; '));
+      if (!sameHeights(heights, this.tiling.heights)) {
+        this._setTiling(sameHeights(heights, this.target.heights) ? this.target : buildTiling(heights));
+      }
       this.perm = perm.slice();
       this.history = [];
       this.future = [];
@@ -565,7 +698,7 @@
     }
 
     reset() {
-      this.setState(Array.from({ length: this.slotCount }, (_, i) => i));
+      this.setState(Array.from({ length: this.slotCount }, (_, i) => i), this.target.heights);
     }
 
     setMode(mode) {
@@ -575,22 +708,36 @@
 
     serialize() {
       return {
-        heights: this.tiling.heights,
+        heights: cloneHeights(this.target.heights),
+        current: cloneHeights(this.tiling.heights),
         mode: this.mode,
+        allowFlip: this.allowFlip,
         perm: this.perm.slice(),
         history: this.history.slice(),
         future: this.future.slice(),
       };
     }
 
+    /** Reconstruye una partida validando la forma, la paridad y el historial. */
     static deserialize(data) {
-      const p = new ProppPuzzle({ heights: data.heights, mode: data.mode });
-      p.setState(data.perm);
-      const okMoves = (list) =>
-        Array.isArray(list) && list.every((m) => m && p.hexagons[m.hex] && (m.turns === 1 || m.turns === 2));
-      if (okMoves(data.history) && okMoves(data.future)) {
-        p.history = data.history.slice();
-        p.future = data.future.slice();
+      const opts = { heights: data.heights, mode: data.mode, allowFlip: data.allowFlip };
+      const p = new ProppPuzzle(opts);
+      p.setState(data.perm, data.current || data.heights);
+      const okList = (list) => Array.isArray(list) && list.every((m) => m && typeof m.key === 'string' && OPS.includes(m.op));
+      if (okList(data.history) && okList(data.future)) {
+        // Comprobamos que todo el historial se puede deshacer y rehacer.
+        const probe = new ProppPuzzle(opts);
+        probe.setState(data.perm, data.current || data.heights);
+        probe.history = data.history.slice();
+        probe.future = data.future.slice();
+        let ok = true;
+        const n = probe.history.length;
+        for (let i = 0; i < n && ok; i++) ok = probe.undo() !== null;
+        for (let i = 0; i < n + data.future.length && ok; i++) ok = probe.redo() !== null;
+        if (ok) {
+          p.history = data.history.slice();
+          p.future = data.future.slice();
+        }
       }
       return p;
     }
@@ -608,6 +755,7 @@
   return {
     ORIENT,
     ORIENT_NAMES,
+    NEXT60,
     project,
     latticeKey,
     makeRng,
@@ -617,6 +765,7 @@
     shareEdge,
     parityOn,
     rotatePoint,
+    sameHeights,
     ProppPuzzle,
   };
 });

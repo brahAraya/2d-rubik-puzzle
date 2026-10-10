@@ -7,6 +7,9 @@
  * móviles, y conservan la silueta hexagonal de un cubo visto en isométrico.
  * Para N = 3 la opción por defecto deja 24 de 27 rombos móviles, 13 cubitos
  * girables y una única zona conexa (búsqueda exhaustiva en scripts/explore.js).
+ *
+ * Con el volteo de 180° activado (`flip: true`, por defecto en el cubo macizo)
+ * la forma también cambia, así que cualquier disposición sirve como objetivo.
  */
 (function (root, factory) {
   const api = factory();
@@ -50,7 +53,7 @@
     escalonado: { label: 'Cubo escalonado', build: steppedCube },
     piramide: { label: 'Pirámide', build: pyramid },
     aleatorio: { label: 'Pila aleatoria', build: randomStack },
-    macizo: { label: 'Cubo macizo (1 cubito)', build: solidCube },
+    macizo: { label: 'Cubo macizo', build: solidCube, flip: true },
   };
 
   return { PRESETS, diagonalCut, steppedCube, pyramid, solidCube, randomStack };

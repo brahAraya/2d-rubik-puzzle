@@ -166,7 +166,7 @@ test('los giros alcanzan exactamente las permutaciones pares de cada zona', () =
     const cur = queue.pop();
     for (const h of p.hexagons) {
       p.perm = cur.slice();
-      p._apply(h.id, 1);
+      p._apply(h.id, 'cw');
       const k = p.perm.join();
       if (!seen.has(k)) {
         seen.add(k);
@@ -254,4 +254,122 @@ test('nearestHexagon encaja con el punto de convergencia más cercano', () => {
     assert.equal(p.nearestHexagon(h.center[0] + 0.1, h.center[1] - 0.05), h.id);
   }
   assert.equal(p.nearestHexagon(100, 100, 1), -1);
+});
+
+/* ---------------- Volteo de 180° ---------------- */
+
+function keyRot180(key, center) {
+  const [u, v] = key.split(',').map(Number);
+  const [cu, cv] = center.split(',').map(Number);
+  return 2 * cu - u + ',' + (2 * cv - v);
+}
+
+test('NEXT60 describe cómo cambia la orientación al girar', () => {
+  for (const h of allPartitions(3)) {
+    const t = buildTiling(h);
+    for (const hex of t.hexagons) {
+      hex.ring.forEach((s, k) => {
+        const o = t.slots[s].orient;
+        const landed = t.slots[hex.ring[(k + 1) % 3]].orient;
+        assert.equal(landed, C.NEXT60[C.NEXT60[o]]);
+      });
+    }
+  }
+});
+
+test('el volteo gira 180° las tres casillas y conserva su identidad', () => {
+  for (const h of allPartitions(3)) {
+    const p = new ProppPuzzle({ heights: h, allowFlip: true });
+    for (const hex of p.hexagons) {
+      const q = new ProppPuzzle({ heights: h, allowFlip: true });
+      const res = q.flip(hex.id);
+      assert.ok(res.ok, res.reason);
+      const before = p.tiling.slots;
+      const after = q.tiling.slots;
+      for (let s = 0; s < p.slotCount; s++) {
+        if (hex.ring.includes(s)) {
+          const rotated = before[s].keys.map((k) => keyRot180(k, hex.key)).sort().join('|');
+          assert.equal(after[s].keys.slice().sort().join('|'), rotated);
+          assert.equal(after[s].orient, before[s].orient);
+        } else {
+          assert.deepEqual(after[s].keys, before[s].keys);
+        }
+      }
+      // El centro sigue siendo un cubito (convexo <-> cóncavo) y volver a voltear lo deshace.
+      const back = q.hexAt(hex.key);
+      assert.ok(back >= 0);
+      assert.notEqual(q.hexagons[back].kind, hex.kind);
+      q.flip(back);
+      assert.ok(C.sameHeights(q.heights, h));
+      assert.deepEqual(q.perm, p.perm);
+    }
+  }
+});
+
+test('con volteo, los cubitos de todas las formas enlazan todas las casillas', () => {
+  for (const n of [1, 2, 3]) {
+    const parent = Array.from({ length: 3 * n * n }, (_, i) => i);
+    const find = (x) => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+    for (const h of allPartitions(n)) {
+      for (const hex of buildTiling(h).hexagons) {
+        parent[find(hex.ring[1])] = find(hex.ring[0]);
+        parent[find(hex.ring[2])] = find(hex.ring[0]);
+      }
+    }
+    assert.equal(new Set(parent.map(find)).size, 1, 'N=' + n);
+  }
+});
+
+test('con volteo, N=1 alcanza exactamente 2 formas × |A3| estados', () => {
+  const p = new ProppPuzzle({ heights: [[1]], allowFlip: true });
+  const key = () => JSON.stringify([p.heights, p.perm]);
+  const seen = new Set([key()]);
+  const queue = [[p.heights, p.perm.slice()]];
+  while (queue.length) {
+    const [h, perm] = queue.pop();
+    for (const op of ['cw', 'ccw', 'flip']) {
+      p.setState(perm, h);
+      p.move(0, op);
+      if (!seen.has(key())) {
+        seen.add(key());
+        queue.push([p.heights, p.perm.slice()]);
+      }
+    }
+  }
+  assert.equal(seen.size, 6);
+});
+
+test('cubo macizo con volteo: el estado aleatorio desordena todo el tablero', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: true });
+  const rng = makeRng(11);
+  const touched = new Set();
+  for (let i = 0; i < 20; i++) {
+    p.randomize(rng);
+    assert.ok(p.analyze().solvable);
+    assert.equal(p.isSolved(), false);
+    p.perm.forEach((x, s) => x !== s && touched.add(s));
+  }
+  assert.equal(touched.size, 27);
+});
+
+test('cubo macizo con volteo: se puede resolver deshaciendo una mezcla', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), allowFlip: true, mode: 'numerado' });
+  const rng = makeRng(2);
+  for (let i = 0; i < 300; i++) {
+    const h = Math.floor(rng() * p.hexagons.length);
+    assert.ok(p.move(h, ['cw', 'ccw', 'flip'][Math.floor(rng() * 3)]).ok);
+  }
+  assert.equal(p.isSolved(), false);
+  const saved = ProppPuzzle.deserialize(JSON.parse(JSON.stringify(p.serialize())));
+  assert.equal(saved.moveCount, 300);
+  while (saved.canUndo()) assert.ok(saved.undo());
+  assert.ok(saved.isSolved());
+});
+
+test('sin volteo, voltear está bloqueado y la forma no puede cambiar', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3) });
+  assert.equal(p.flip(0).ok, false);
+  const other = P.steppedCube(3);
+  assert.equal(p.analyze(p.perm, other).solvable, false);
+  assert.throws(() => p.setState(p.perm, other));
 });

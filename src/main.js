@@ -6,14 +6,14 @@
 
   const { ProppPuzzle } = ProppCore;
   const { PRESETS } = ProppPresets;
-  const STORAGE_KEY = 'propp-lozenge-v1';
+  const STORAGE_KEY = 'propp-lozenge-v2';
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const $ = (id) => document.getElementById(id);
   const ui = {
     board: $('board'), moves: $('moves'), time: $('time'), progress: $('progress'), parity: $('parity'),
     status: $('status'), info: $('info'), win: $('win'), winDetail: $('win-detail'),
-    size: $('size'), preset: $('preset'), mode: $('mode'),
+    size: $('size'), preset: $('preset'), mode: $('mode'), flip: $('flip'), flipBtn: $('flip-btn'),
   };
 
   for (const key in PRESETS) {
@@ -25,37 +25,52 @@
 
   const view = new ProppView.BoardView(ui.board, {
     duration: reduceMotion ? 0 : 280,
-    onIdle: () => checkWin(),
+    onIdle: () => {
+      refreshSelection();
+      checkWin();
+    },
   });
 
   let puzzle = null;
   let presetKey = 'escalonado';
   let timer = { start: 0, elapsed: 0, running: false };
   let won = false;
-  let selectedHex = -1;
+  let selectedKey = null; // vértice de la herramienta de selección
   let statusTimeout = 0;
 
   /* ---------------- Partida ---------------- */
 
-  function newPuzzle(n, preset, mode, state) {
+  function newPuzzle(n, preset, mode, allowFlip, state) {
     presetKey = preset;
-    puzzle = state ? ProppPuzzle.deserialize(state) : new ProppPuzzle({ heights: PRESETS[preset].build(n), mode });
+    puzzle = state
+      ? ProppPuzzle.deserialize(state)
+      : new ProppPuzzle({ heights: PRESETS[preset].build(n), mode, allowFlip });
     puzzle.on(() => {
       updateHud();
       save();
     });
     view.mount(puzzle);
-    selectedHex = -1;
+    selectedKey = null;
     view.setSelection(null);
-    ui.size.value = String(puzzle.tiling.n);
+    ui.size.value = String(puzzle.target.n);
     ui.preset.value = presetKey;
     ui.mode.value = puzzle.mode;
-    const fixed = puzzle.slotCount - puzzle.movable.filter(Boolean).length;
+    ui.flip.value = puzzle.allowFlip ? 'si' : 'no';
+    ui.flipBtn.disabled = !puzzle.allowFlip;
+    const fixed = puzzle.slotCount - puzzle.everMovable.filter(Boolean).length;
     const zones = puzzle.components.filter((c) => c.length > 1).length;
-    ui.info.textContent =
-      puzzle.hexagons.length + ' cubitos girables · ' + zones + ' zona(s) conexa(s) · ' +
-      fixed + ' de ' + puzzle.slotCount + ' rombos fijos';
+    ui.info.textContent = puzzle.allowFlip
+      ? 'Con volteo la forma también se desordena: hay que reconstruir la pila original y sus colores. ' +
+        'Las ' + puzzle.slotCount + ' piezas son móviles.'
+      : puzzle.target.hexagons.length + ' cubitos girables · ' + zones + ' zona(s) conexa(s) · ' +
+        fixed + ' de ' + puzzle.slotCount + ' rombos fijos' +
+        (puzzle.target.hexagons.length <= 1 ? '. Activa el volteo de 180° para poder desordenar todo el cubo.' : '');
     updateHud();
+  }
+
+  function rebuild() {
+    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value, ui.flip.value === 'si');
+    startRandom();
   }
 
   function startRandom() {
@@ -74,9 +89,13 @@
 
   /* ---------------- Movimientos ---------------- */
 
-  function rotate(hexId, turns) {
-    const before = puzzle.perm.slice();
-    const res = puzzle.rotate(hexId, turns);
+  function selectedHex() {
+    return selectedKey === null ? -1 : puzzle.hexAt(selectedKey);
+  }
+
+  /** op: 'cw' (120°), 'ccw' (240°) o 'flip' (volteo de 180°). */
+  function act(op) {
+    const res = puzzle.move(selectedHex(), op);
     if (!res.ok) {
       blocked(res.reason);
       return false;
@@ -85,26 +104,27 @@
       timer.running = true;
       timer.start = performance.now() - timer.elapsed;
     }
-    view.enqueue(hexId, turns, before);
+    view.enqueue(res.transition);
+    refreshSelection();
     return true;
   }
 
   function undo() {
-    const before = puzzle.perm.slice();
-    const m = puzzle.undo();
-    if (!m) return say('No hay movimientos que deshacer.');
-    view.enqueue(m.hex, m.turns, before);
+    const tr = puzzle.undo();
+    if (!tr) return say('No hay movimientos que deshacer.');
+    view.enqueue(tr);
+    refreshSelection();
   }
 
   function redo() {
-    const before = puzzle.perm.slice();
-    const m = puzzle.redo();
-    if (!m) return say('No hay movimientos que rehacer.');
-    view.enqueue(m.hex, m.turns, before);
+    const tr = puzzle.redo();
+    if (!tr) return say('No hay movimientos que rehacer.');
+    view.enqueue(tr);
+    refreshSelection();
   }
 
   function blocked(reason) {
-    say('Giro bloqueado: ' + reason, true);
+    say('Movimiento bloqueado: ' + reason, true);
     if (view.selection) {
       view.setSelection(Object.assign({}, view.selection, { shake: true }));
       setTimeout(() => view.selection && view.setSelection(Object.assign({}, view.selection, { shake: false })), 350);
@@ -123,16 +143,10 @@
 
   /* ---------------- Selección ---------------- */
 
-  function selectAt(x, y) {
-    const v = puzzle.nearestVertex(x, y);
-    // Fuera del tablero no se muestra la herramienta.
-    if (!v || Math.hypot(v.point[0] - x, v.point[1] - y) > 0.9) {
-      selectedHex = -1;
-      view.setSelection(null);
-      return;
-    }
-    selectedHex = v.hex;
-    view.setSelection({ vertex: v, hex: v.hex });
+  function selectVertex(v, quiet) {
+    selectedKey = v ? v.key : null;
+    view.setSelection(v ? { vertex: v, hex: v.hex } : null);
+    if (!v || quiet) return;
     if (v.hex < 0) {
       const n = v.slots.length;
       say(n === 3
@@ -140,24 +154,37 @@
         : 'Aquí convergen ' + n + ' rombos: no forman un cubito de 3 piezas.', true, true);
     } else {
       const h = puzzle.hexagons[v.hex];
-      say('Cubito ' + h.kind + ' seleccionado.', false, true);
+      const flipHint = puzzle.allowFlip
+        ? (h.kind === 'convexo' ? ' · F: quitar el cubito' : ' · F: poner un cubito')
+        : '';
+      say('Cubito ' + h.kind + ' seleccionado' + flipHint, false, true);
     }
+  }
+
+  function selectAt(x, y) {
+    const v = puzzle.nearestVertex(x, y);
+    // Fuera del tablero no se muestra la herramienta.
+    if (!v || Math.hypot(v.point[0] - x, v.point[1] - y) > 0.9) return selectVertex(null);
+    selectVertex(v);
+  }
+
+  // Tras un volteo cambian los vértices: recolocamos la herramienta en el mismo punto.
+  function refreshSelection() {
+    if (selectedKey === null) return;
+    selectVertex(puzzle.tiling.vertices.find((v) => v.key === selectedKey) || null, true);
   }
 
   function selectHex(hexId) {
     const h = puzzle.hexagons[hexId];
-    if (!h) return;
-    const v = puzzle.tiling.vertices.find((vv) => vv.key === h.key);
-    selectedHex = hexId;
-    view.setSelection({ vertex: v, hex: hexId });
+    if (h) selectVertex(puzzle.tiling.vertices.find((v) => v.key === h.key));
   }
 
   // Selección por teclado: salta al cubito más cercano en la dirección pedida.
   function moveSelection(dx, dy) {
     const hs = puzzle.hexagons;
     if (!hs.length) return;
-    if (selectedHex < 0) return selectHex(puzzle.nearestHexagon(0, 0));
-    const c = hs[selectedHex].center;
+    if (selectedHex() < 0) return selectHex(puzzle.nearestHexagon(0, 0));
+    const c = hs[selectedHex()].center;
     let best = -1;
     let bestScore = Infinity;
     for (const h of hs) {
@@ -187,34 +214,33 @@
   });
   ui.board.addEventListener('pointerleave', (e) => {
     if (e.pointerType === 'touch') return;
-    selectedHex = -1;
-    view.setSelection(null);
+    selectVertex(null);
   });
   ui.board.addEventListener('pointerdown', (e) => {
     lastPointer = e.pointerType;
     if (e.pointerType !== 'touch') return;
     const q = view.toLattice(e);
     if (!q) return;
-    const prev = selectedHex;
+    const prev = selectedHex();
     selectAt(q[0], q[1]);
     // Segundo toque sobre el mismo cubito: girar.
-    touchPending = prev >= 0 && prev === selectedHex;
+    touchPending = prev >= 0 && prev === selectedHex();
   });
   ui.board.addEventListener('click', (e) => {
     if (lastPointer === 'touch') {
-      if (touchPending) rotate(selectedHex, 1);
+      if (touchPending) act('cw');
       touchPending = false;
       return;
     }
     const q = view.toLattice(e);
     if (q) selectAt(q[0], q[1]);
-    rotate(selectedHex, e.shiftKey ? 2 : 1);
+    act(e.altKey ? 'flip' : e.shiftKey ? 'ccw' : 'cw');
   });
   ui.board.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     const q = view.toLattice(e);
     if (q) selectAt(q[0], q[1]);
-    rotate(selectedHex, 2);
+    act('ccw');
   });
 
   document.addEventListener('keydown', (e) => {
@@ -237,14 +263,17 @@
     }
     if (k === 'e' || (k === 'enter' && e.target === document.body)) {
       e.preventDefault();
-      rotate(selectedHex, 1);
+      act('cw');
     } else if (k === 'q') {
-      rotate(selectedHex, 2);
+      act('ccw');
+    } else if (k === 'f') {
+      act('flip');
     }
   });
 
-  $('rot-cw').addEventListener('click', () => rotate(selectedHex, 1));
-  $('rot-ccw').addEventListener('click', () => rotate(selectedHex, 2));
+  $('rot-cw').addEventListener('click', () => act('cw'));
+  $('rot-ccw').addEventListener('click', () => act('ccw'));
+  ui.flipBtn.addEventListener('click', () => act('flip'));
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
   $('new').addEventListener('click', startRandom);
@@ -253,20 +282,19 @@
     puzzle.scramble(30);
     view.sync();
     resetTimer();
-    say('Mezclado con 30 giros aleatorios.');
+    say(puzzle.allowFlip ? 'Mezclado con 30 giros y volteos aleatorios.' : 'Mezclado con 30 giros aleatorios.');
   });
   $('solve-reset').addEventListener('click', () => {
     puzzle.reset();
     view.sync();
     resetTimer();
   });
-  ui.size.addEventListener('change', () => {
-    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value);
-    startRandom();
-  });
+  ui.size.addEventListener('change', rebuild);
+  ui.flip.addEventListener('change', rebuild);
   ui.preset.addEventListener('change', () => {
-    newPuzzle(+ui.size.value, ui.preset.value, ui.mode.value);
-    startRandom();
+    // El cubo macizo sólo es un puzzle con volteo: lo activamos por defecto.
+    ui.flip.value = PRESETS[ui.preset.value].flip ? 'si' : 'no';
+    rebuild();
   });
   ui.mode.addEventListener('change', () => {
     puzzle.setMode(ui.mode.value);
@@ -323,7 +351,7 @@
       const data = JSON.parse(raw);
       if (!PRESETS[data.preset]) return false;
       // deserialize valida la partición plana y la paridad del estado guardado.
-      newPuzzle(0, data.preset, null, data.state);
+      newPuzzle(0, data.preset, null, null, data.state);
       timer.elapsed = data.elapsed || 0;
       won = puzzle.isSolved() && puzzle.moveCount > 0;
       return true;
@@ -333,7 +361,7 @@
   }
 
   if (!load()) {
-    newPuzzle(3, 'escalonado', 'color');
+    newPuzzle(3, 'escalonado', 'color', false);
     startRandom();
   }
 })();

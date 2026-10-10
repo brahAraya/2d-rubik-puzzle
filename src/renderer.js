@@ -58,7 +58,7 @@
       this.puzzle = puzzle;
       this.queue = [];
       this.animating = false;
-      this.displayPerm = puzzle.perm.slice();
+      this.drawnTiling = null;
       const n = puzzle.tiling.n;
       const r = n * SCALE + 18;
       const svg = this.svg;
@@ -85,27 +85,16 @@
       this.toolLayer = el('g', { class: 'tool', 'aria-hidden': 'true' }, svg);
       el('path', { d: pathFrom(outline), class: 'board-outline' }, svg);
 
-      this.slotEls = puzzle.tiling.slots.map((s) =>
-        el('path', {
-          d: pathFrom(s.corners),
-          class: 'slot orient-' + s.orient + (puzzle.movable[s.id] ? '' : ' fixed'),
-        }, this.slotLayer)
-      );
+      // La identidad de cada casilla es estable; su geometría cambia con los volteos.
+      this.slotEls = puzzle.target.slots.map((s) => el('path', { class: 'slot orient-' + s.orient }, this.slotLayer));
 
-      // Numeración de las piezas móviles (modo numerado).
+      // Numeración de las piezas que pueden moverse (modo numerado).
       this.pieceNumber = new Array(puzzle.slotCount).fill(0);
       let num = 0;
-      puzzle.tiling.slots.forEach((s) => {
-        if (puzzle.movable[s.id]) this.pieceNumber[s.id] = ++num;
+      puzzle.target.slots.forEach((s) => {
+        if (puzzle.everMovable[s.id]) this.pieceNumber[s.id] = ++num;
       });
-      this.labelEls = puzzle.tiling.slots.map((s) => {
-        const t = el('text', {
-          x: (s.centroid[0] * SCALE).toFixed(2),
-          y: (s.centroid[1] * SCALE).toFixed(2),
-          class: 'label',
-        }, this.labelLayer);
-        return t;
-      });
+      this.labelEls = puzzle.target.slots.map(() => el('text', { class: 'label' }, this.labelLayer));
 
       // Herramienta de 3 piezas.
       this.toolHex = el('path', { class: 'tool-hex' }, this.toolLayer);
@@ -113,8 +102,13 @@
       this.toolArrow = el('path', { class: 'tool-arrow', 'marker-end': 'url(#arrowhead)' }, this.toolLayer);
       this.toolDot = el('circle', { r: 6, class: 'tool-dot' }, this.toolLayer);
 
+      this.display = this._current();
       this.paint();
       this.drawSelection();
+    }
+
+    _current() {
+      return { tiling: this.puzzle.tiling, perm: this.puzzle.perm.slice() };
     }
 
     /* ---------------- Pintado ---------------- */
@@ -123,17 +117,32 @@
       return shade(PIECE_RGB[this.puzzle.pieceColor(piece)], light);
     }
 
-    paint(perm = this.displayPerm) {
+    /** Pinta una instantánea { tiling, perm } (por defecto, la mostrada). */
+    paint(snap = this.display) {
       const p = this.puzzle;
       const numbered = p.mode === 'numerado';
       this.svg.classList.toggle('numbered', numbered);
-      p.tiling.slots.forEach((s) => {
+      const { tiling, perm } = snap;
+      if (this.drawnTiling !== tiling) {
+        const movable = new Set();
+        tiling.hexagons.forEach((h) => h.ring.forEach((id) => movable.add(id)));
+        tiling.slots.forEach((s) => {
+          const path = this.slotEls[s.id];
+          path.setAttribute('d', pathFrom(s.corners));
+          // Con volteo toda casilla acaba siendo móvil: no marcamos ninguna como fija.
+          path.classList.toggle('fixed', !p.allowFlip && !movable.has(s.id));
+          this.labelEls[s.id].setAttribute('x', (s.centroid[0] * SCALE).toFixed(2));
+          this.labelEls[s.id].setAttribute('y', (s.centroid[1] * SCALE).toFixed(2));
+        });
+        this.drawnTiling = tiling;
+      }
+      tiling.slots.forEach((s) => {
         const piece = perm[s.id];
         const path = this.slotEls[s.id];
         path.setAttribute('fill', this.fillFor(piece, LIGHT[s.orient]));
         path.classList.remove('hole');
         const label = this.labelEls[s.id];
-        label.textContent = numbered && p.movable[piece] ? this.pieceNumber[piece] : '';
+        label.textContent = numbered && p.everMovable[piece] ? this.pieceNumber[piece] : '';
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
       });
     }
@@ -193,11 +202,12 @@
     /* ---------------- Animación ---------------- */
 
     /**
-     * Encola la animación de un giro ya validado y aplicado en el motor.
-     * `before` es la permutación previa al giro.
+     * Encola la animación de un movimiento ya validado y aplicado en el motor.
+     * `tr` es la transición devuelta por el motor: forma y permutación antes y
+     * después, centro, casillas del hexágono y ángulo de giro.
      */
-    enqueue(hexId, turns, before) {
-      this.queue.push({ hexId, turns, before: before.slice() });
+    enqueue(tr) {
+      this.queue.push(tr);
       if (!this.animating) this._next();
     }
 
@@ -207,7 +217,7 @@
       this.animating = false;
       if (this._raf) cancelAnimationFrame(this._raf);
       this.animLayer.textContent = '';
-      this.displayPerm = this.puzzle.perm.slice();
+      this.display = this._current();
       this.paint();
     }
 
@@ -219,49 +229,48 @@
       const job = this.queue.shift();
       if (!job) {
         this.animating = false;
-        this.displayPerm = this.puzzle.perm.slice();
+        this.display = this._current();
         this.paint();
         this.onIdle();
         return;
       }
       this.animating = true;
       const p = this.puzzle;
-      const hex = p.hexagons[job.hexId];
-      const slots = hex.ring.map((id) => p.tiling.slots[id]);
-      const c = hex.center;
-      const total = (job.turns * 2 * Math.PI) / 3;
-      const duration = this.duration * (job.turns === 1 ? 1 : 1.45);
+      const c = job.center;
+      const steps60 = Math.round(job.angle / (Math.PI / 3));
+      const duration = this.duration * (0.55 + 0.225 * steps60);
 
       this.paint(job.before);
       this.animLayer.textContent = '';
-      const moving = slots.map((s, k) => {
-        this.slotEls[s.id].classList.add('hole');
-        this.labelEls[s.id].textContent = '';
-        const piece = job.before[s.id];
+      const moving = job.ring.map((id) => {
+        const s = job.before.tiling.slots[id];
+        this.slotEls[id].classList.add('hole');
+        this.labelEls[id].textContent = '';
+        const piece = job.before.perm[id];
         const path = el('path', { d: pathFrom(s.corners), class: 'slot moving' }, this.animLayer);
         const label = el('text', { class: 'label' }, this.animLayer);
-        if (p.mode === 'numerado' && p.movable[piece]) label.textContent = this.pieceNumber[piece];
+        if (p.mode === 'numerado' && p.everMovable[piece]) label.textContent = this.pieceNumber[piece];
         label.setAttribute('fill', p.pieceColor(piece) === 0 ? '#333' : '#fff');
-        return { s, k, piece, path, label };
+        // Orientación que va adoptando el rombo cada 60° de giro.
+        const orients = [s.orient];
+        for (let k = 0; k < steps60; k++) orients.push(ProppCore.NEXT60[orients[k]]);
+        return { s, piece, path, label, orients };
       });
 
       const start = performance.now();
       const frame = (now) => {
         // El sello de requestAnimationFrame puede ser anterior a `start`.
         const t = duration > 0 ? Math.min(1, Math.max(0, (now - start) / duration)) : 1;
-        const a = total * ease(t);
+        const a = job.angle * ease(t);
         const deg = (a * 180) / Math.PI;
         const tf = `rotate(${deg} ${c[0] * SCALE} ${c[1] * SCALE})`;
-        // Avance en "caras" recorridas: 0..turns. Interpolamos la luz entre
-        // la orientación de origen y las casillas por las que pasa.
-        const steps = a / ((2 * Math.PI) / 3);
+        // Interpolamos la luz entre las orientaciones por las que pasa el rombo.
+        const steps = a / (Math.PI / 3);
+        const i = Math.min(Math.floor(steps), steps60 - 1);
+        const f = steps - i;
         moving.forEach((m) => {
           m.path.setAttribute('transform', tf);
-          const i = Math.min(Math.floor(steps), job.turns - 1);
-          const f = steps - i;
-          const from = slots[(m.k + i) % 3].orient;
-          const to = slots[(m.k + i + 1) % 3].orient;
-          const light = LIGHT[from] * (1 - f) + LIGHT[to] * f;
+          const light = LIGHT[m.orients[i]] * (1 - f) + LIGHT[m.orients[i + 1]] * f;
           m.path.setAttribute('fill', this.fillFor(m.piece, light));
           const q = ProppCore.rotatePoint(m.s.centroid, c, a);
           m.label.setAttribute('x', q[0] * SCALE);
@@ -271,10 +280,7 @@
           this._raf = requestAnimationFrame(frame);
         } else {
           this.animLayer.textContent = '';
-          this.displayPerm = job.before.slice();
-          hex.ring.forEach((s, k) => {
-            this.displayPerm[hex.ring[(k + job.turns) % 3]] = job.before[s];
-          });
+          this.display = job.after;
           this.paint();
           this._next();
         }

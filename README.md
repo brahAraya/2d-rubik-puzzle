@@ -10,7 +10,7 @@ Abre `index.html` en el navegador. No hace falta compilar ni servidor: los
 scripts son clásicos (no módulos ES), así que también funcionan desde `file://`.
 
 ```bash
-npm test          # 17 tests del motor (node:test, sin dependencias)
+npm test          # 24 tests del motor (node:test, sin dependencias)
 npm run explore   # búsqueda de la mejor disposición inicial (opcional: N)
 ```
 
@@ -60,12 +60,32 @@ hexágono regular: la esquina visible de un cubito (convexo) o un rincón
 
 ### Disposición inicial
 
-El cubo macizo sólo tiene **un** cubito girable (la esquina central), así que
-no sirve como puzzle. `scripts/explore.js` recorre las 980 particiones planas
-de 3×3×3. Las mejores son las pilas en escalera cortadas por un plano diagonal:
-**24 de 27 rombos móviles, 13 cubitos girables y una sola zona conexa**. La
-disposición por defecto («Cubo escalonado») usa ese corte para cualquier N; la
-pirámide, la pila aleatoria y el cubo macizo también están disponibles.
+Con sólo giros de 120°/240° la teselación nunca cambia, y el cubo macizo tiene
+**un** único cubito girable (la esquina central): no sirve como puzzle.
+`scripts/explore.js` recorre las 980 particiones planas de 3×3×3. Las mejores
+son las pilas en escalera cortadas por un plano diagonal: **24 de 27 rombos
+móviles, 13 cubitos girables y una sola zona conexa**. La disposición por
+defecto («Cubo escalonado») usa ese corte para cualquier N.
+
+### Volteo de 180° (quitar / poner un cubito)
+
+Girar un hexágono de 3 rombos 180° lo convierte en la otra teselación del
+mismo hexágono: un cubito que sobresale desaparece y deja un rincón, o un
+rincón se rellena con un cubito. Es el «flip» clásico de las teselaciones por
+rombos y hace que aparezcan cubitos nuevos donde antes no había.
+
+Con el volteo activado (opción «Movimientos», por defecto en «Cubo macizo»),
+la **forma** del tablero también forma parte del estado y del objetivo: hay
+que reconstruir la pila original con sus colores. Así el cubo macizo se vuelve
+un puzzle completo en el que las 27 piezas se mueven.
+
+Cada casilla tiene una identidad estable aunque cambie la forma (la cara
+superior de la columna (i, j), la cara +x de la fila (j, k) y la cara +y de la
+fila (i, k)). Al voltear, cada una de las tres piezas gira media vuelta y cae
+en la nueva posición de **su misma casilla**, con la misma orientación. Por
+eso el volteo cambia la forma pero no la permutación (verificado en los
+tests).
+
 
 ### Objetivo
 
@@ -78,25 +98,32 @@ La partida empieza en un estado aleatorio uniforme entre los estados alcanzables
 
 ### Paridad y estados imposibles
 
-Cada giro es un 3-ciclo, es decir, una permutación **par**. Los 3-ciclos de una
-zona conexa generan exactamente el grupo alternado de esa zona. Por tanto un
-estado es alcanzable si y sólo si:
+Cada giro es un 3-ciclo, es decir, una permutación **par**, y el volteo no
+permuta piezas. Los 3-ciclos de una zona conexa generan exactamente el grupo
+alternado de esa zona. Por tanto un estado es alcanzable si y sólo si:
 
-1. es una permutación de las piezas,
-2. ninguna pieza ha salido de su zona conexa,
-3. la permutación dentro de cada zona es par.
+1. la forma es una partición plana válida (y, sin volteo, la original),
+2. es una permutación de las piezas,
+3. ninguna pieza ha salido de su zona conexa,
+4. la permutación dentro de cada zona es par.
+
+Con volteo, cualquier forma es alcanzable y los cubitos de todas las formas
+enlazan todas las casillas en una sola zona. Los tests lo comprueban de forma
+exhaustiva para N ≤ 3.
 
 `analyze()` aplica este criterio. Un test lo verifica por fuerza bruta: en un
 tablero con zonas de 3 y 7 rombos, la exploración BFS alcanza exactamente
 |A₃|·|A₇| = 7560 estados. `randomize()` baraja cada zona y, si sale impar,
 `fixParity()` intercambia dos piezas del **mismo color** (en modo color el
-tablero se ve igual). `setState()` y la carga desde `localStorage` rechazan los
+tablero se ve igual). Con volteo, además se elige una forma aleatoria mediante
+un paseo de volteos. `setState()` y la carga desde `localStorage` rechazan los
 estados imposibles. La cabecera muestra el estado de paridad en todo momento.
 
 ### Deshacer / rehacer
 
-El motor guarda una pila de giros `{hex, turns}`. Deshacer aplica el giro
-inverso (`3 − turns`) y lo pasa a la pila de rehacer. Un giro nuevo vacía la
+El motor guarda una pila de movimientos `{key, op}`, donde `key` es el vértice
+central y `op` es `cw`, `ccw` o `flip`. Deshacer aplica el inverso (`cw`↔`ccw`;
+un volteo se deshace volteando otra vez) y lo pasa a la pila de rehacer. Un giro nuevo vacía la
 pila de rehacer. Los giros se animan en cola, así que pulsar Ctrl+Z varias
 veces seguidas se reproduce en orden. La partida (con su historial) se guarda en
 `localStorage`.
@@ -108,6 +135,7 @@ veces seguidas se reproduce en orden. La partida (con su historial) se guarda en
 | Seleccionar cubito | mover el puntero | tocar | flechas |
 | Girar 120° horario | clic | volver a tocar | `E` / `Enter` |
 | Girar 240° | Mayús+clic / clic derecho | botón ↺ | `Q` |
+| Voltear 180° (si está activado) | Alt+clic | botón ⇅ | `F` |
 | Deshacer / rehacer | botones | botones | `Ctrl+Z` / `Ctrl+Y` |
 
 ## Estructura
