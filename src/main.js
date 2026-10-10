@@ -146,7 +146,7 @@
   function act() {
     const res = puzzle.move(selectedHex(), MOVE);
     if (!res.ok) {
-      blocked(res);
+      blocked();
       return false;
     }
     if (!timer.running && !won) {
@@ -169,9 +169,8 @@
     view.enqueue(tr);
   }
 
-  function blocked(res) {
-    const key = 'reason.' + res.code;
-    say(t('status.blocked', { reason: ProppI18n.STRINGS.es[key] ? t(key) : res.reason }), true);
+  // Giro bloqueado: basta con la sacudida del selector rojo, sin texto.
+  function blocked() {
     view.shake();
   }
 
@@ -314,9 +313,8 @@
     $('redo').disabled = !puzzle.canRedo();
   }
 
-  function say(msg, warn = false) {
+  function say(msg) {
     ui.status.textContent = msg;
-    ui.status.classList.toggle('warn', warn);
     clearTimeout(statusTimeout);
     statusTimeout = setTimeout(() => (ui.status.textContent = ''), 3500);
   }

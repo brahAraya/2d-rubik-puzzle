@@ -201,7 +201,6 @@ h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.02em; }
   text-align: center;
   color: var(--muted);
 }
-.status.warn { color: var(--bad); font-weight: 600; }
 
 .win {
   position: absolute;
