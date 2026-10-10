@@ -20,8 +20,11 @@
     [0, 158, 96], // izquierda
     [214, 40, 57], // derecha
   ];
-  // Luz por orientación de la casilla (luz cenital ligeramente desde la izquierda).
-  const LIGHT = [1.0, 0.82, 0.68];
+  // Luz por orientación de la casilla. El puzzle físico es plano, así que por
+  // defecto las fichas no se sombrean: cada una se ve con su color tal cual.
+  // Con SHADED = true vuelve el sombreado 3D (luz cenital desde la izquierda).
+  const SHADED = false;
+  const LIGHT = SHADED ? [1.0, 0.82, 0.68] : [1, 1, 1];
 
   function el(name, attrs, parent) {
     const node = document.createElementNS(SVG_NS, name);
