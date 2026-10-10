@@ -20,9 +20,9 @@
   --panel-2: #f8f6f1;
   --accent-2: #6d5dfc;
   /* Halos del fondo con los colores del cubo (amarillo, verde y rojo). */
-  --glow-1: rgba(255, 208, 0, 0.45);
-  --glow-2: rgba(0, 158, 96, 0.32);
-  --glow-3: rgba(214, 40, 57, 0.28);
+  --glow-1: rgba(233, 184, 114, 0.45);
+  --glow-2: rgba(105, 153, 93, 0.32);
+  --glow-3: rgba(255, 90, 95, 0.28);
 }
 
 /* Tema oscuro: el del sistema si el usuario no eligió, o el elegido con el botón. */
@@ -40,12 +40,12 @@
     --sel-bad: #a9aeb7;
     --outline: #000000;
     --edge: #000000;
-    --piece-dim: 0.8;
+    --piece-dim: 1;
     --panel-2: #191c21;
     --accent-2: #9d8cff;
-    --glow-1: rgba(255, 208, 0, 0.16);
-    --glow-2: rgba(0, 158, 96, 0.22);
-    --glow-3: rgba(214, 40, 57, 0.22);
+    --glow-1: rgba(233, 184, 114, 0.16);
+    --glow-2: rgba(105, 153, 93, 0.22);
+    --glow-3: rgba(255, 90, 95, 0.22);
     color-scheme: dark;
   }
 }
@@ -62,12 +62,12 @@
   --sel-bad: #a9aeb7;
   --outline: #000000;
   --edge: #000000;
-  --piece-dim: 0.8;
+  --piece-dim: 1;
   --panel-2: #191c21;
   --accent-2: #9d8cff;
-  --glow-1: rgba(255, 208, 0, 0.16);
-  --glow-2: rgba(0, 158, 96, 0.22);
-  --glow-3: rgba(214, 40, 57, 0.22);
+  --glow-1: rgba(233, 184, 114, 0.16);
+  --glow-2: rgba(105, 153, 93, 0.22);
+  --glow-3: rgba(255, 90, 95, 0.22);
   color-scheme: dark;
 }
 
@@ -530,9 +530,9 @@ label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; col
 .help-goal p { margin: 0; line-height: 1.45; }
 .swatches { display: grid; grid-template-columns: repeat(3, 10px); gap: 3px; flex: none; }
 .swatches i { width: 10px; height: 22px; border-radius: 3px; }
-.sw-y { background: #ffd000; }
-.sw-g { background: #009e60; }
-.sw-r { background: #d62839; }
+.sw-y { background: #e9b872; }
+.sw-g { background: #69995d; }
+.sw-r { background: #ff5a5f; }
 .help-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
 .help-steps li {
   display: grid;

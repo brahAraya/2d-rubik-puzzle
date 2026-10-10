@@ -16,9 +16,9 @@
   // Colores estándar de un cubo de Rubik visto desde la esquina U-F-R:
   // arriba amarillo, frente (izquierda) verde, derecha rojo.
   const PIECE_RGB = [
-    [255, 208, 0], // superior
-    [0, 158, 96], // izquierda
-    [214, 40, 57], // derecha
+    [233, 184, 114], // superior: amarillo #E9B872
+    [105, 153, 93], // izquierda: verde #69995D
+    [255, 90, 95], // derecha: rojo #FF5A5F
   ];
   // Luz por orientación de la casilla. El puzzle físico es plano, así que por
   // defecto las fichas no se sombrean: cada una se ve con su color tal cual.
