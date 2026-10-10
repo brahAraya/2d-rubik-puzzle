@@ -170,12 +170,23 @@ button.with-icon svg {
 /* Selector de tamaño: cuatro botones que funcionan como opciones. */
 .segmented {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: auto repeat(4, 1fr);
+  align-items: center;
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--bg);
+}
+.segmented svg {
+  width: 16px;
+  height: 16px;
+  margin: 0 3px 0 6px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .segmented button {
   padding: 7px 0;
@@ -193,8 +204,7 @@ button.with-icon svg {
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
-.stats dt,
-.field-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
+.stats dt { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
 .stats dd { margin: 0; font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 .sep {
