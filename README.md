@@ -51,9 +51,13 @@ browser. No build step or server is needed.
 - **Keyboard:** arrow keys move the selection, `E` or `Enter` rotates.
 - **Undo / redo:** use the icon buttons (hover over them to see the shortcut),
   or `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` on a Mac).
-- **Language and theme:** the header has a language picker (Spanish or
-  English) and a light/dark mode button. Both choices are remembered. On the
+- **Language and theme:** the top of the side panel has a language picker
+  (Spanish or English) and a light/dark mode button. Both choices are remembered. On the
   first visit the game follows the browser language and the system theme.
+
+On desktop the page always fits the window without scrolling: the board
+scales to the available space. On phones, or with a high zoom level, the page
+switches to a single column that scrolls normally.
 
 Each new game starts from a random arrangement, like taking every tile out of
 the frame and putting them back at random. The game is saved in the browser,

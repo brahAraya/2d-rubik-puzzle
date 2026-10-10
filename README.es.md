@@ -52,9 +52,13 @@ en un navegador. No hace falta compilar ni usar un servidor.
 - **Teclado:** las flechas mueven la selección y `E` o `Enter` gira.
 - **Deshacer / rehacer:** usa los botones con icono (al pasar el ratón se ve el
   atajo), o `Ctrl+Z` / `Ctrl+Y` (`⌘Z` / `⌘⇧Z` en Mac).
-- **Idioma y tema:** en la cabecera hay un selector de idioma (español o
-  inglés) y un botón de modo claro/oscuro. Las dos opciones se recuerdan. En la
+- **Idioma y tema:** arriba del panel lateral hay un selector de idioma
+  (español o inglés) y un botón de modo claro/oscuro. Las dos opciones se recuerdan. En la
   primera visita el juego usa el idioma del navegador y el tema del sistema.
+
+En escritorio la página siempre cabe en la ventana sin hacer scroll: el
+tablero se escala al espacio disponible. En el móvil, o con mucho zoom, la
+página pasa a una sola columna que se desplaza con normalidad.
 
 Cada partida nueva empieza desde una disposición aleatoria, como si sacaras
 todas las fichas del marco y las volvieras a colocar al azar. La partida se
