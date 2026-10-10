@@ -8,7 +8,7 @@
 A browser version of **Propp Lozenge**, a flat puzzle that looks like a 3D cube.
 It is written in vanilla HTML, CSS and JavaScript, with no dependencies.
 
-🛒 **Get the physical puzzle:** [Propp Lozenge on Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+🛒 **Get the physical puzzle:** [Propp Lozenge on Etsy](https://www.etsy.com/listing/4565297719/pastilla-de-propp)
 
 ## The puzzle
 
@@ -34,7 +34,10 @@ way back.
 
 ## How to play
 
-Open `index.html` in a browser. No build step or server is needed.
+**▶ Play online: [braharaya.github.io/2d-rubik-puzzle](https://braharaya.github.io/2d-rubik-puzzle/)**
+
+You can also play offline: download the repository and open `index.html` in a
+browser. No build step or server is needed.
 
 - **Goal:** rebuild the solid cube with yellow top faces, green left faces and
   red right faces.
@@ -77,10 +80,10 @@ including the move history. You can also play 2×2×2, 4×4×4 and 5×5×5 versi
 - **Undo / redo:** each move is stored as its centre point. Undo applies a
   −60° rotation at the same point.
 
-More technical detail, in Spanish, is in [README.es.md](README.es.md).
+To run the engine tests (Node.js 18 or later, no dependencies):
 
 ```bash
-npm test   # engine tests (node:test, no dependencies)
+npm test
 ```
 
 ## Project layout
@@ -101,7 +104,7 @@ scripts/explore.js  search for the tilings with the most rotatable groups
 
 - **Puzzle invented by:** James (Jim) Propp
 - **Puzzle designed by:** Oskar van Deventer
-- **Physical puzzle:** [available on Etsy](https://www.etsy.com/es/listing/4565297719/pastilla-de-propp)
+- **Physical puzzle:** [available on Etsy](https://www.etsy.com/listing/4565297719/pastilla-de-propp)
 
 This project is an unofficial, fan-made digital version created for learning
 and enjoyment. It is not affiliated with or endorsed by the inventor or the
