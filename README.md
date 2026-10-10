@@ -39,8 +39,10 @@ way back.
 You can also play offline: download the repository and open `index.html` in a
 browser. No build step or server is needed.
 
-- **Goal:** rebuild the solid cube with yellow top faces, green left faces and
-  red right faces.
+- **Goal:** rebuild the solid cube with each of its three faces a single
+  colour. Any arrangement counts: green can end up on top, on the left or on
+  the right, as long as every face is uniform. All six arrangements can be
+  reached.
 - **Select:** move the pointer over the board. The three-tile tool snaps to the
   nearest point where three tiles meet. Green means the three tiles form a
   valid group and can be rotated. Red means rotation is blocked at that point.
@@ -81,6 +83,8 @@ including the move history. You can also play 2×2×2, 4×4×4 and 5×5×5 versi
   permutation is always reachable. When a random arrangement comes out odd, two
   tiles of the same colour are swapped. That fixes the parity without changing
   how the board looks, which is why any random arrangement is solvable.
+- **Winning:** the game checks that the board has the solid cube shape and
+  that the nine tiles of each face share a colour, whichever it is.
 - **Undo / redo:** each move is stored as its centre point. Undo applies a
   −60° rotation at the same point.
 

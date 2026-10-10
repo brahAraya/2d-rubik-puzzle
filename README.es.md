@@ -39,8 +39,10 @@ siempre hay una manera de volver atrás.
 También puedes jugar sin conexión: descarga el repositorio y abre `index.html`
 en un navegador. No hace falta compilar ni usar un servidor.
 
-- **Objetivo:** reconstruir el cubo macizo con las caras superiores amarillas,
-  las izquierdas verdes y las derechas rojas.
+- **Objetivo:** reconstruir el cubo macizo con cada una de sus tres caras de
+  un solo color. Cualquier reparto vale: el verde puede acabar arriba, a la
+  izquierda o a la derecha, siempre que cada cara sea uniforme. Los seis
+  repartos posibles se pueden alcanzar.
 - **Seleccionar:** mueve el puntero sobre el tablero. La herramienta de tres
   fichas se ajusta al punto más cercano donde se juntan tres fichas. Verde
   significa que las tres fichas forman un grupo válido y se pueden girar. Rojo
@@ -85,6 +87,8 @@ jugar en versiones de 2×2×2, 4×4×4 y 5×5×5; la de 3×3×3 es la original.
   disposición aleatoria sale impar, se intercambian dos fichas del mismo color.
   Eso corrige la paridad sin cambiar el aspecto del tablero, y por eso
   cualquier disposición aleatoria tiene solución.
+- **Victoria:** el juego comprueba que el tablero tenga la forma del cubo
+  macizo y que las nueve fichas de cada cara compartan color, sea cual sea.
 - **Deshacer / rehacer:** cada movimiento se guarda como su punto central.
   Deshacer aplica un giro de −60° en ese mismo punto.
 

@@ -476,3 +476,32 @@ test('con sólo +60° permitido, −60° se bloquea pero deshacer y rehacer func
   p.randomize(rng);
   assert.ok(p.analyze().solvable);
 });
+
+test('modo color: gana cualquier reparto de los 3 colores entre las 3 caras', () => {
+  const p = new ProppPuzzle({ heights: P.solidCube(3), mode: 'color', allowedOps: ['cw60'] });
+  const orientOf = (s) => p.target.slots[s].orient;
+  const perms = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]];
+  for (const sigma of perms) {
+    // Cada casilla de orientación o recibe una ficha de color sigma[o].
+    const pool = [[], [], []];
+    for (let piece = 0; piece < 27; piece++) pool[p.pieceColor(piece)].push(piece);
+    const perm = Array.from({ length: 27 }, (_, s) => pool[sigma[orientOf(s)]].pop());
+    p.fixParity(perm, p.target.heights);
+    assert.ok(p.analyze(perm, p.target.heights).solvable, 'reparto ' + sigma + ' alcanzable');
+    p.setState(perm, p.target.heights);
+    assert.ok(p.isSolved(), 'reparto ' + sigma + ' cuenta como resuelto');
+  }
+  // Una cara con dos colores no está resuelta.
+  p.reset();
+  const perm = p.perm.slice();
+  const top = perm.findIndex((x, s) => orientOf(s) === 0);
+  const left = perm.findIndex((x, s) => orientOf(s) === 1);
+  [perm[top], perm[left]] = [perm[left], perm[top]];
+  p.fixParity(perm, p.target.heights);
+  p.setState(perm, p.target.heights);
+  assert.equal(p.isSolved(), false);
+  // La forma también cuenta: caras uniformes pero sin la forma del cubo no gana.
+  p.reset();
+  p.move(p.hexAt('0,0'), 'cw60');
+  assert.equal(p.isSolved(), false);
+});

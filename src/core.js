@@ -570,9 +570,27 @@
       return this.mode === 'numerado' ? perm[s] === s : this.pieceColor(perm[s]) === this.target.slots[s].orient;
     }
 
+    /**
+     * Resuelto = la forma original y:
+     *  - modo color: cada cara (orientación) de un solo color, sea cual sea.
+     *    Vale cualquiera de las 6 formas de repartir los 3 colores entre las
+     *    3 caras (p. ej. verde arriba o verde a la izquierda); todas son
+     *    alcanzables porque en modo color cualquier colocación tiene solución.
+     *  - modo numerado: cada pieza en su casilla exacta.
+     */
     _isSolvedState(perm, heights) {
       if (!sameHeights(heights, this.target.heights)) return false;
-      for (let s = 0; s < this.slotCount; s++) if (!this._slotOk(s, perm, this.target)) return false;
+      if (this.mode === 'numerado') {
+        for (let s = 0; s < this.slotCount; s++) if (perm[s] !== s) return false;
+        return true;
+      }
+      const faceColor = [-1, -1, -1];
+      for (let s = 0; s < this.slotCount; s++) {
+        const o = this.target.slots[s].orient;
+        const c = this.pieceColor(perm[s]);
+        if (faceColor[o] === -1) faceColor[o] = c;
+        else if (faceColor[o] !== c) return false;
+      }
       return true;
     }
 
