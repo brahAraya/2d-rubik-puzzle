@@ -83,10 +83,15 @@
 
   ui.theme.addEventListener('click', () => {
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    storageSet(THEME_KEY, next);
-    updateThemeButton();
-    view.refreshTheme();
+    const apply = () => {
+      document.documentElement.dataset.theme = next;
+      storageSet(THEME_KEY, next);
+      updateThemeButton();
+      view.refreshTheme();
+    };
+    // Fundido entre temas donde el navegador lo permite; si no, cambio directo.
+    if (document.startViewTransition && !reduceMotion) document.startViewTransition(apply);
+    else apply();
   });
   if (darkQuery && darkQuery.addEventListener) {
     darkQuery.addEventListener('change', () => {
@@ -305,6 +310,32 @@
     resetTimer();
   });
   ui.size.addEventListener('change', rebuild);
+
+  /* ---------------- Instrucciones desplegables ---------------- */
+
+  // <details> no anima su apertura: animamos la altura del contenido a mano.
+  const help = document.querySelector('.help');
+  const helpBody = help.querySelector('.help-body');
+  let helpAnim = null;
+  help.querySelector('summary').addEventListener('click', (e) => {
+    if (reduceMotion || !helpBody.animate) return;
+    e.preventDefault();
+    if (helpAnim) helpAnim.cancel();
+    const opening = !help.open;
+    const startHeight = opening ? 0 : helpBody.offsetHeight;
+    help.open = true;
+    const endHeight = opening ? helpBody.scrollHeight : 0;
+    help.classList.toggle('closing', !opening);
+    helpAnim = helpBody.animate(
+      [{ height: startHeight + 'px', opacity: opening ? 0 : 1 }, { height: endHeight + 'px', opacity: opening ? 1 : 0 }],
+      { duration: 260, easing: 'ease' }
+    );
+    helpAnim.onfinish = () => {
+      helpAnim = null;
+      help.classList.remove('closing');
+      if (!opening) help.open = false;
+    };
+  });
 
   /* ---------------- HUD ---------------- */
 

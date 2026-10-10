@@ -48,6 +48,15 @@
 
         <hr class="sep">
 
+        <label><span data-i18n="size">Tamaño</span>
+          <select id="size">
+            <option value="2">2 × 2 × 2</option>
+            <option value="3" selected>3 × 3 × 3</option>
+            <option value="4">4 × 4 × 4</option>
+            <option value="5">5 × 5 × 5</option>
+          </select>
+        </label>
+
         <div class="group">
           <button id="new" type="button" class="primary" data-i18n="new">Nuevo estado aleatorio</button>
           <button id="undo" type="button" class="icon">
@@ -59,32 +68,26 @@
         </div>
         <button id="solve-reset" type="button" data-i18n="reset">Restablecer (resuelto)</button>
 
-        <label><span data-i18n="size">Tamaño</span>
-          <select id="size">
-            <option value="2">2 × 2 × 2</option>
-            <option value="3" selected>3 × 3 × 3</option>
-            <option value="4">4 × 4 × 4</option>
-            <option value="5">5 × 5 × 5</option>
-          </select>
-        </label>
-
         <details class="help">
           <summary data-i18n="help.title">Cómo se juega</summary>
-          <ul>
-            <li data-i18n="help.goal"></li>
-            <li data-i18n="help.select"></li>
-            <li data-i18n="help.colors"></li>
-            <li data-i18n="help.click"></li>
-            <li data-i18n="help.shape"></li>
-            <li data-i18n="help.touch"></li>
-            <li data-i18n="help.keys"></li>
-          </ul>
+          <div class="help-body">
+            <ul>
+              <li data-i18n="help.goal"></li>
+              <li data-i18n="help.select"></li>
+              <li data-i18n="help.colors"></li>
+              <li data-i18n="help.click"></li>
+              <li data-i18n="help.shape"></li>
+              <li data-i18n="help.touch"></li>
+              <li data-i18n="help.keys"></li>
+            </ul>
+          </div>
         </details>
-
-        <a class="buy" href="https://www.etsy.com/listing/4565297719/pastilla-de-propp" target="_blank" rel="noopener" data-i18n="buy">Compra el puzzle físico</a>
       </aside>
       <small class="note" data-i18n="vibe"></small>
-      <small class="note" data-i18n="credits">Puzzle inventado por James (Jim) Propp y diseñado por Oskar van Deventer.</small>
+      <small class="note">
+        <span data-i18n="credits">Puzzle inventado por James (Jim) Propp y diseñado por Oskar van Deventer.</span>
+        <a href="https://www.etsy.com/listing/4565297719/pastilla-de-propp" target="_blank" rel="noopener" data-i18n="buy">Compra el puzzle físico</a>
+      </small>
     </div>
   </main>
 
