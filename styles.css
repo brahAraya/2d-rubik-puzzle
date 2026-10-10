@@ -7,6 +7,10 @@
   --accent: #1f6feb;
   --ok: #10b981;
   --bad: #e11d48;
+  /* Selector: azul si se puede girar, gris neutro si no. Ninguno de los dos
+     coincide con los colores del cubo (amarillo, verde y rojo). */
+  --sel-ok: #1f6feb;
+  --sel-bad: #7c818b;
   --edge: #1b1d22;
   --outline: #1b1d22; /* borde exterior del cubo; --edge: líneas entre fichas */
   --piece-dim: 1; /* factor de luz de las fichas (lo lee el renderer) */
@@ -32,6 +36,8 @@
     --accent: #58a6ff;
     --hole: #0c0d0f;
     --on-accent: #0d1117;
+    --sel-ok: #58a6ff;
+    --sel-bad: #a3a8b2;
     --outline: var(--ink);
     --edge: var(--ink);
     --piece-dim: 0.8;
@@ -52,6 +58,8 @@
   --accent: #58a6ff;
   --hole: #0c0d0f;
   --on-accent: #0d1117;
+  --sel-ok: #58a6ff;
+  --sel-bad: #a3a8b2;
   --outline: var(--ink);
   --edge: var(--ink);
   --piece-dim: 0.8;
@@ -346,12 +354,12 @@ button.with-icon svg {
 }
 #board:not(.numbered) .labels { display: none; }
 
-/* Herramienta de selección. --mix (0% verde → 100% rojo) lo fija el renderer
+/* Herramienta de selección. --mix (0% azul → 100% gris) lo fija el renderer
    para que el color cambie de forma continua al pasar de un punto a otro. */
 .tool {
   pointer-events: none;
   --mix: 0%;
-  --tool: color-mix(in srgb, var(--bad) var(--mix), var(--ok));
+  --tool: color-mix(in srgb, var(--sel-bad) var(--mix), var(--sel-ok));
 }
 .tool-hex {
   fill: color-mix(in srgb, var(--tool) 13%, transparent);

@@ -43,8 +43,9 @@ browser. No build step or server is needed.
   the right, as long as every face is uniform. All six arrangements can be
   reached.
 - **Select:** move the pointer over the board. The three-tile tool snaps to the
-  nearest point where three tiles meet. Green means the three tiles form a
-  valid group and can be rotated. Red means rotation is blocked at that point.
+  nearest point where three tiles meet. Blue means the three tiles form a
+  valid group and can be rotated. Grey (with a dashed outline) means rotation
+  is blocked at that point.
 - **Rotate:** click to rotate the group 60° clockwise. That is the only move.
   To rotate further, click again; six clicks bring the group back to where it
   started.

@@ -44,9 +44,9 @@ en un navegador. No hace falta compilar ni usar un servidor.
   acabar arriba, a la izquierda o a la derecha, siempre que cada cara sea
   uniforme. Las seis combinaciones posibles se pueden alcanzar.
 - **Seleccionar:** mueve el puntero sobre el tablero. La herramienta de tres
-  fichas se ajusta al punto más cercano donde se juntan tres fichas. Verde
-  significa que las tres fichas forman un grupo válido y se pueden girar. Rojo
-  significa que el giro está bloqueado en ese punto.
+  fichas se ajusta al punto más cercano donde se juntan tres fichas. Azul
+  significa que las tres fichas forman un grupo válido y se pueden girar. Gris
+  (con línea discontinua) significa que el giro está bloqueado en ese punto.
 - **Girar:** haz clic para girar el grupo 60° en el sentido de las agujas del
   reloj. Es el único movimiento. Para girar más, vuelve a hacer clic; con seis
   clics el grupo vuelve a su posición inicial.
